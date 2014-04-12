@@ -5,6 +5,8 @@
         }
     },
     "require": {
-        "cboden/Ratchet": "0.3.*"
+        "cboden/Ratchet": "0.3.*",
+        "monolog/monolog": "1.8.*",
+        "symfony/console": "2.4.*"
     }
 }
