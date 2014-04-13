@@ -11,7 +11,7 @@ class Processes
 		return "processes";
 	}
 
-	protected function getData()
+	public function getData()
 	{
 		return ProcessesInfo::get();
 	}

@@ -11,7 +11,7 @@ class Uptime
 		return 'uptime';
 	}
 
-	protected function getData()
+	public function getData()
 	{
 		return UptimeInfo::get();
 	}
