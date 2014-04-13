@@ -1,0 +1,85 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#wrapper {
+    max-width: 1200px;
+    min-width: 600px;
+    margin: 0 auto;
+}
+
+#header {
+    position: fixed;
+    background-color: white;
+}
+
+#server-status-header {
+    margin-bottom: 10px;
+}
+
+#server-status-header h1 {
+    margin-bottom: 4px;
+}
+
+#canvas {
+    padding-top: 120px;
+}
+
+.data {
+    margin: 5px 0;
+}
+
+.indicator-block canvas {
+    border: 1px solid #b1b2b8;
+    vertical-align: middle;
+    width: 300px;
+    height: 20px;
+}
+
+#processors canvas {
+    width: 260px;
+}
+
+.indicator-block {
+    margin: 5px 0 10px 0;
+}
+
+.indicator-block h2 {
+    margin: 0;
+    font-size: 95%;
+}
+
+.indicator-block > div {
+    margin-bottom: 5px;
+    font-family: 'Ubuntu Mono', Console, Consolas, Courier, 'Courier New', sans-serif;
+    font-size: 95%;
+    display: flex;
+}
+
+.indicator-block .label, .indicator-block .value {
+    text-align: right;
+    height: 20px;
+    padding: 2px 4px 0 2px;
+    vertical-align: middle;
+}
+
+.indicator-block .label {
+    font-size: 90%;
+    width: 34px;
+    overflow: hidden;
+    display: inline-block;
+    padding-top: 4px;
+}
+
+.indicator-block .value {
+    width: 50px;
+    overflow: hidden;
+    display: inline-block;
+    background-color: #ddd;
+}
+
+.indicator-block .warning {
+    background-color: #c40a13;
+    color: white;
+}

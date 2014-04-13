@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <title>Server status — WebSockets Agent Client</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="wrapper">
+    <div id="server-status-header">
+        <h1>Server Status</h1>
+        <label for="server">Server</label> <input id="server" type="text" style="width:150px;" value="localhost"/>
+        <button id="start">Start</button>
+        <button id="stop">Stop</button>
+        <label for="interval-value">Interval</label>
+        <input id="interval-value" type="text" style="width:40px;" value="1"/>
+        <button id="interval">Set interval</button>
+    </div>
+
+    <div id="processors" class="indicator-block">
+        <h2>Processors</h2>
+
+        <div>
+            <span id="processors-cpu0-label" class="label">cpu0</span>
+            <canvas id="processors-cpu0" width="300" height="20"></canvas>
+            <span id="processors-cpu0-value" class="value"></span>
+        </div>
+    </div>
+
+    <div id="memory" class="indicator-block">
+        <h2>Memory</h2>
+
+        <div>
+            <canvas id="memory-canvas" width="300" height="20"></canvas>
+            <span id="memory-value" class="value"></span></div>
+    </div>
+
+    <div id="swap" class="indicator-block">
+        <h2>Swap</h2>
+
+        <div>
+            <canvas id="swap-canvas" width="300" height="20"></canvas>
+            <span id="swap-value" class="value"></span></div>
+    </div>
+</div>
+<script src="client.js"></script>
+
+<script>
+    var types = [
+        {key: 'user', color: "rgb(60,163,23)"},
+        {key: 'system', color: "rgb(247,187,22)"},
+        {key: 'iowait', color: "rgb(232,23,23)"}
+    ];
+    var cpuStat = function (allCpus) {
+        for (key in allCpus) {
+            if (!allCpus.hasOwnProperty(key)) {
+                continue;
+            }
+
+            var data = allCpus[key];
+
+            var processorBlock = $('#processors-' + key);
+            if (processorBlock.length < 1) {
+                var newEl = $('#processors').append($('<div><span id="processors-' + key + '-label" class="label">' + key + '</span>'
+                        + '<canvas id="processors-' + key + '"  width="300" height="20"></canvas>'
+                        + '<span id="processors-' + key + '-value" class="value"></span></div>'));
+                processorBlock = newEl.find('#processors-' + key);
+            }
+
+            var canvas = processorBlock.get(0);
+            var valueField = $('#processors-' + key + '-value');
+            var labelField = $('#processors-' + key + '-label');
+            labelField.text(key);
+            var ctx = canvas.getContext("2d");
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            var lastX = 0;
+            var width = canvas.width;
+            var height = canvas.height;
+            types.forEach(function (element) {
+                var value = data[element.key];
+                ctx.fillStyle = element.color;
+                var segmentWidth = Math.round(value * width);
+                if (segmentWidth > 1) {
+                    ctx.fillRect(lastX + 1, 1, segmentWidth - 1, canvas.height - 2);
+                    lastX += segmentWidth;
+                }
+
+            });
+
+            valueField.text(Math.round(data.usage * 1000) / 10 + '%');
+            if (data.usage >= 0.90) {
+                valueField.addClass('warning');
+            }
+            else {
+                valueField.removeClass('warning');
+            }
+        }
+    };
+
+    var typesMemory = [
+        {key: 'apps', color: "rgb(33,145,29)"},
+        {key: 'buffers', color: "rgb(160,20,0)"},
+        {key: 'cached', color: "rgb(242,143,12)"},
+        {key: 'swapCached', color: "rgb(232,23,23)"}
+    ];
+    var typesSwap = [
+        {key: 'used', color: "rgb(232,23,23)"}
+    ];
+    var memInfo = function (meminfo) {
+        for (key in meminfo) {
+            if (!meminfo.hasOwnProperty(key)) {
+                continue;
+            }
+
+            var data = meminfo[key];
+
+            var canvas = $('#' + key + '-canvas').get(0);
+            var valueField = $('#' + key + '-value');
+            var ctx = canvas.getContext("2d");
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            var lastX = 0;
+            var width = canvas.width;
+            var types = (key == 'memory' ? typesMemory : typesSwap);
+            types.forEach(function (element) {
+                var value = data[element.key];
+                ctx.fillStyle = element.color;
+                var segmentWidth = Math.round(value / data.total * width);
+                if (segmentWidth > 1) {
+                    ctx.fillRect(lastX + 1, 1, segmentWidth - 1, canvas.height - 2);
+                    lastX += segmentWidth;
+                }
+            });
+
+            valueField.text(Math.round(data.used / data.total * 1000) / 10 + '%');
+            if (data.usage > 0.85) {
+                valueField.addClass('warning');
+            }
+            else {
+                valueField.removeClass('warning');
+            }
+        }
+    };
+    var client = new AgentServerClient(function (msg) {
+        var jsonResponce = JSON.parse(msg);
+        cpuStat(jsonResponce.cpu_stat);
+        memInfo(jsonResponce.meminfo);
+    });
+
+    var serverAddress = $('#server').val();
+    if (serverAddress.length < 1) {
+        serverAddress = 'localhost';
+    }
+    if (serverAddress.indexOf(':') < 0) {
+        serverAddress += ":8000";
+    }
+
+    var setIntervalCallback = function () {
+        client.setInterval($('#interval-value').val());
+    };
+
+    $('#start').on('click', function () {
+        client.connect({
+            uri: "ws://" + serverAddress + "/",
+            onOpenCallback: function () {
+                setIntervalCallback();
+                client.start();
+            },
+            onErrorCallback: function (data) {
+                alert('WebSockets error: ' + data);
+            }
+        });
+    });
+    $('#stop').on('click', function () {
+        client.stop();
+        client.disconnect();
+    });
+    $('#interval').on('click', setIntervalCallback);
+</script>
+</body>
+</html>
