@@ -38,7 +38,9 @@ class MessageComponent implements MessageComponentInterface
 	{
 		$this->logger && $this->logger->debug('MessageComponent::onOpen');
 
-		$this->workers[spl_object_hash($connection)] = new Worker($connection, $this->loop, $this->getDefaultPlugins());
+		$worker = new Worker($connection, $this->loop, $this->getDefaultPlugins(), $this->logger);
+		$this->workers[spl_object_hash($connection)] = $worker;
+		$worker->open();
 	}
 
 	public function onMessage(ConnectionInterface $connection, $message)
@@ -59,7 +61,6 @@ class MessageComponent implements MessageComponentInterface
 	{
 		$this->logger && $this->logger->debug("MessageComponent::onError: {$e->getMessage()}");
 
-		$this->workers[spl_object_hash($connection)]->stop();
 		$connection->close();
 		unset($this->workers[spl_object_hash($connection)]);
 	}

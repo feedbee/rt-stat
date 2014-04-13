@@ -12,7 +12,8 @@ class MemoryInfo
 		$result = [];
 		foreach ($lines as $line) {
 			preg_match('/(.*):\s*(\d+)( (.*))?/u', $line, $matches);
-			$result[$matches[1]] = ['value' => (int)$matches[2], 'units' => $matches[4]];
+			$units = isset($matches[4]) ? $matches[4] : '';
+			$result[$matches[1]] = ['value' => (int)$matches[2], 'units' => $units];
 		}
 
 		return $result;

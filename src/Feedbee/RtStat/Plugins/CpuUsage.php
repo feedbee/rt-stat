@@ -8,6 +8,11 @@ class CpuUsage
 {
 	private $lastData = [];
 
+	public function __construct()
+	{
+		$this->lastData = ProcessorInfo::get();
+	}
+
 	public function getName()
 	{
 		return "cpu_stat";
@@ -28,8 +33,8 @@ class CpuUsage
 			$diffTotal = array_sum($deltas);
 			$diffIdle = $deltas['idle'];
 			$diffAllUser = $deltas['user'] + $deltas['nice'];
-			$diffAllSystem = $deltas['system'] + $deltas['irc'] + $deltas['softirq'];
-			$diffIoWait = $deltas['iowait'] + $deltas['irc'] + $deltas['softirq'];
+			$diffAllSystem = $deltas['system'] + $deltas['irq'] + $deltas['softirq'];
+			$diffIoWait = $deltas['iowait'] + $deltas['irq'] + $deltas['softirq'];
 
 			$usage = ($diffTotal - $diffIdle) / $diffTotal;
 			$user = $diffAllUser / $diffTotal;
