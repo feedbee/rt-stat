@@ -18,10 +18,23 @@
         <button id="interval">Set interval</button>
     </div>
 
+    <div id="uptime" class="indicator-block">
+        <h2>Summary</h2>
+
+        <div>
+            Server time is <span id="uptime-time">—</span>, uptime <span id="uptime-uptime">—</span> min,
+            users <span id="uptime-users">—</span>, LA <span id="uptime-la1">—</span>; <span id="uptime-la5">—</span>;
+            <span id="uptime-la15">—</span></div>
+        <div>
+            Processes: A:<span id="processes-all">—</span>, R:<span id="processes-running">—</span>,
+            S:<span id="processes-sleep">—</span>, Z:<span id="processes-zombie">—</span>
+        </div>
+    </div>
+
     <div id="processors" class="indicator-block">
         <h2>Processors</h2>
 
-        <div>
+        <div class="flex">
             <span id="processors-cpu0-label" class="label">cpu0</span>
             <canvas id="processors-cpu0" width="300" height="20"></canvas>
             <span id="processors-cpu0-value" class="value"></span>
@@ -31,17 +44,19 @@
     <div id="memory" class="indicator-block">
         <h2>Memory</h2>
 
-        <div>
+        <div class="flex">
             <canvas id="memory-canvas" width="300" height="20"></canvas>
-            <span id="memory-value" class="value"></span></div>
+            <span id="memory-value" class="value"></span>
+        </div>
     </div>
 
     <div id="swap" class="indicator-block">
         <h2>Swap</h2>
 
-        <div>
+        <div class="flex">
             <canvas id="swap-canvas" width="300" height="20"></canvas>
-            <span id="swap-value" class="value"></span></div>
+            <span id="swap-value" class="value"></span>
+        </div>
     </div>
 </div>
 <script src="client.js"></script>
@@ -53,7 +68,7 @@
         {key: 'iowait', color: "rgb(232,23,23)"}
     ];
     var cpuStat = function (allCpus) {
-        for (key in allCpus) {
+        for (var key in allCpus) {
             if (!allCpus.hasOwnProperty(key)) {
                 continue;
             }
@@ -110,7 +125,7 @@
         {key: 'used', color: "rgb(232,23,23)"}
     ];
     var memInfo = function (meminfo) {
-        for (key in meminfo) {
+        for (var key in meminfo) {
             if (!meminfo.hasOwnProperty(key)) {
                 continue;
             }
@@ -145,10 +160,31 @@
             }
         }
     };
+
+    var uptime = function (uptime) {
+        for (var key in uptime) {
+            if (!uptime.hasOwnProperty(key)) {
+                continue;
+            }
+            $('#uptime-' + key).text(uptime[key]);
+        }
+    };
+
+    var processes = function (processes) {
+        for (var key in processes) {
+            if (!processes.hasOwnProperty(key)) {
+                continue;
+            }
+            $('#processes-' + key).text(processes[key]);
+        }
+    };
+
     var client = new AgentServerClient(function (msg) {
         var jsonResponce = JSON.parse(msg);
         cpuStat(jsonResponce.cpu_stat);
         memInfo(jsonResponce.meminfo);
+        uptime(jsonResponce.uptime);
+        processes(jsonResponce.processes);
     });
 
     var serverAddress = $('#server').val();

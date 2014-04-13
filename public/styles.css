@@ -54,6 +54,8 @@ body {
     margin-bottom: 5px;
     font-family: 'Ubuntu Mono', Console, Consolas, Courier, 'Courier New', sans-serif;
     font-size: 95%;
+}
+.indicator-block > .flex {
     display: flex;
 }
 
