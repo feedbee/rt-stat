@@ -11,16 +11,16 @@ class ProcessesInfo extends ShellCommand
 		$allProcesses = explode("\n", $data);
 
 		$running = count(array_filter($allProcesses, function ($v) {
-				return $v == 'R';
+				return substr($v, 0, 1) == 'R';
 			})) - 1; // all running except self (ps) process
 		$sleep = count(array_filter($allProcesses, function ($v) {
-			return $v == 'S' || $v == 'D';
+			return substr($v, 0, 1) == 'S' || substr($v, 0, 1) == 'D';
 		}));
 		$stopped = count(array_filter($allProcesses, function ($v) {
-			return $v == 'T';
+			return substr($v, 0, 1) == 'T';
 		}));
 		$zombie = count(array_filter($allProcesses, function ($v) {
-			return $v == 'Z';
+			return substr($v, 0, 1) == 'Z';
 		}));
 
 		return [
