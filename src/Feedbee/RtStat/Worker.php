@@ -112,6 +112,10 @@ class Worker
 				}
 				$this->setInterval($arg);
 				break;
+			case 'quit':
+			case 'exit':
+				$this->quit();
+				break;
 			default:
 				$this->sendError("Unknown message");
 		}
@@ -143,6 +147,13 @@ class Worker
 			$this->loop->cancelTimer($this->pushTimer);
 			$this->pushTimer = null;
 		}
+	}
+
+	public function quit()
+	{
+		$this->logger->debug('Worker::quit');
+
+		$this->connection->close();
 	}
 
 	private function send($text)
