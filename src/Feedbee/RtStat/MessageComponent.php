@@ -2,45 +2,75 @@
 
 namespace Feedbee\RtStat;
 
+use Feedbee\RtStat\Plugins\CpuUsage;
+use Feedbee\RtStat\Plugins\MemInfo;
+use Feedbee\RtStat\Plugins\Processes;
+use Feedbee\RtStat\Plugins\Uptime;
 use Psr\Log\LoggerInterface;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
+use React\EventLoop\LoopInterface;
 
 class MessageComponent implements MessageComponentInterface
 {
 	/**
-	 * @var \SplObjectStorage
+	 * @var Worker[]
 	 */
-	private $clients;
+	private $workers;
 
 	/**
 	 * @var \Psr\Log\LoggerInterface
 	 */
 	private $logger;
 
-	public function __construct(LoggerInterface $logger = null)
+	/**
+	 * @var \React\EventLoop\LoopInterface
+	 */
+	private $loop;
+
+	public function __construct(LoopInterface $loop, LoggerInterface $logger = null)
 	{
-		$this->clients = new \SplObjectStorage;
+		$this->loop = $loop;
 		$this->logger = $logger;
 	}
 
-	public function onOpen(ConnectionInterface $conn)
+	public function onOpen(ConnectionInterface $connection)
 	{
 		$this->logger && $this->logger->debug('MessageComponent::onOpen');
+
+		$this->workers[spl_object_hash($connection)] = new Worker($connection, $this->loop, $this->getDefaultPlugins());
 	}
 
-	public function onMessage(ConnectionInterface $from, $msg)
+	public function onMessage(ConnectionInterface $connection, $message)
 	{
-		$this->logger && $this->logger->debug('MessageComponent::onMessage');
+		$this->logger && $this->logger->debug("MessageComponent::onMessage: {$message}");
+
+		$this->workers[spl_object_hash($connection)]->processMessage($message);
 	}
 
-	public function onClose(ConnectionInterface $conn)
+	public function onClose(ConnectionInterface $connection)
 	{
 		$this->logger && $this->logger->debug('MessageComponent::onClose');
+
+		$this->workers[spl_object_hash($connection)]->stop();
 	}
 
-	public function onError(ConnectionInterface $conn, \Exception $e)
+	public function onError(ConnectionInterface $connection, \Exception $e)
 	{
-		$this->logger && $this->logger->debug('MessageComponent::onError');
+		$this->logger && $this->logger->debug("MessageComponent::onError: {$e->getMessage()}");
+
+		$this->workers[spl_object_hash($connection)]->stop();
+		$connection->close();
+		unset($this->workers[spl_object_hash($connection)]);
+	}
+
+	private function getDefaultPlugins()
+	{
+		return [
+			new CpuUsage,
+			new MemInfo,
+			new Processes,
+			new Uptime,
+		];
 	}
 }

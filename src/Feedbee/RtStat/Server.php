@@ -4,7 +4,8 @@ namespace Feedbee\RtStat;
 
 use Psr\Log\LoggerInterface;
 use Ratchet\Server\IoServer;
-
+use React\EventLoop\Factory as EventLoopFactory;
+use React\Socket\Server as SocketServer;
 
 class Server
 {
@@ -20,8 +21,21 @@ class Server
 		$this->logger = $logger;
 		$logger && $this->logger->info("Server config: {$address}:{$port}");
 
-		$messageComponent = new MessageComponent($logger);
-		$this->server = IoServer::factory($messageComponent, $port, $address);
+		$loop = EventLoopFactory::create();
+
+		$socket = new SocketServer($loop);
+		$socket->listen($port, $address);
+
+		$messageComponent = new MessageComponent($loop, $logger);
+
+		$server = new IoServer(
+		/*new WsServer*/
+			($messageComponent),
+			$socket,
+			$loop
+		);
+
+		$server->run();
 	}
 
 	/**
