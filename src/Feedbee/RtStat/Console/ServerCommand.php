@@ -32,18 +32,29 @@ class ServerCommand extends Command
 				'p',
 				InputOption::VALUE_REQUIRED,
 				'Select TCP-port to bind. Default is 8000.'
-			);
+			)
+
+			->addOption(
+				'web-sockets',
+				'w',
+				InputOption::VALUE_NONE,
+				'Set to work as WebSocket server. Default is simple raw socket server'
+			);;
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		$interface = '0.0.0.0';
 		$port = 8000;
+		$type = Server::TYPE_RAW;
 		if ($i = $input->getOption('interface')) {
 			$interface = $i;
 		}
 		if ($p = $input->getOption('port')) {
 			$port = $p;
+		}
+		if ($input->getOption('web-sockets')) {
+			$type = Server::TYPE_WEB_SOCKET;
 		}
 
 		$logger = null;
@@ -61,7 +72,7 @@ class ServerCommand extends Command
 			$logger->pushHandler(new StreamHandler('php://stderr', $level));
 		}
 
-		$server = new Server($logger, $port, $interface);
+		$server = new Server($logger, $port, $interface, $type);
 		$server->run();
 	}
 }
