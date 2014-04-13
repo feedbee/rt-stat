@@ -4,7 +4,8 @@ namespace Feedbee\RtStat\Drivers\Linux;
 
 class ProcessorInfo
 {
-	static public function get() {
+	static public function get()
+	{
 		$cpuStatFile = "/proc/stat"; // file description: http://www.linuxhowtos.org/System/procstat.htm
 		$lines = file($cpuStatFile);
 
@@ -26,7 +27,7 @@ class ProcessorInfo
 			}
 
 			$values = [];
-			foreach (['user','nice','system','idle','iowait','irq','softirq'] as $k => $v) {
+			foreach (['user', 'nice', 'system', 'idle', 'iowait', 'irq', 'softirq'] as $k => $v) {
 				$values[$v] = $array[$k + 1];
 			}
 

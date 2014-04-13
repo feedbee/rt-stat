@@ -32,8 +32,7 @@ class ServerCommand extends Command
 				'p',
 				InputOption::VALUE_REQUIRED,
 				'Select TCP-port to bind. Default is 8000.'
-			)
-		;
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)

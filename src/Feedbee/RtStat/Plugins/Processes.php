@@ -6,11 +6,13 @@ use Feedbee\RtStat\Drivers\Linux\ProcessesInfo;
 
 class Processes
 {
-	public function getName() {
-	return "processes";
-}
+	public function getName()
+	{
+		return "processes";
+	}
 
-	protected function getData() {
+	protected function getData()
+	{
 		return ProcessesInfo::get();
 	}
 }

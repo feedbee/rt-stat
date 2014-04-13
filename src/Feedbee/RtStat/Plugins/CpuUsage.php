@@ -8,11 +8,13 @@ class CpuUsage
 {
 	private $lastData = [];
 
-	public function getName() {
+	public function getName()
+	{
 		return "cpu_stat";
 	}
 
-	public function getData() {
+	public function getData()
+	{
 		$newData = ProcessorInfo::get();
 		$lastData =& $this->lastData;
 
@@ -35,7 +37,9 @@ class CpuUsage
 			$iowait = $diffIoWait / $diffTotal;
 
 			$lineData = ['usage' => $usage, 'user' => $user, 'system' => $system, 'iowait' => $iowait];
-			$lineData = array_map(function($value) { return round($value, 2); }, $lineData);
+			$lineData = array_map(function ($value) {
+				return round($value, 2);
+			}, $lineData);
 
 			$cpuUsage[$cpuIndex] = $lineData;
 		}

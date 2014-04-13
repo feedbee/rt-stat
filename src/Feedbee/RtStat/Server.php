@@ -2,8 +2,8 @@
 
 namespace Feedbee\RtStat;
 
-use Ratchet\Server\IoServer;
 use Psr\Log\LoggerInterface;
+use Ratchet\Server\IoServer;
 
 
 class Server
@@ -15,7 +15,8 @@ class Server
 
 	private $logger;
 
-	public function __construct(LoggerInterface $logger = null, $port = 8000, $address = '0.0.0.0') {
+	public function __construct(LoggerInterface $logger = null, $port = 8000, $address = '0.0.0.0')
+	{
 		$this->logger = $logger;
 		$logger && $this->logger->info("Server config: {$address}:{$port}");
 
@@ -39,7 +40,8 @@ class Server
 		return $this->logger;
 	}
 
-	public function run() {
+	public function run()
+	{
 		$this->logger->info('Start server');
 		$this->server->run();
 	}

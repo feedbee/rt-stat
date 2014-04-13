@@ -6,16 +6,19 @@ class ShellCommand
 {
 	static protected $command;
 
-	static public function get() {
+	static public function get()
+	{
 		return static::parse(static::output());
 	}
 
-	static protected function output() {
+	static protected function output()
+	{
 		$cmd = static::$command;
 		return `{$cmd}`;
 	}
 
-	static protected function parse($data) {
+	static protected function parse($data)
+	{
 		return $data;
 	}
 }

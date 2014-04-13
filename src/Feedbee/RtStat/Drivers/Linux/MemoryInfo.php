@@ -4,7 +4,8 @@ namespace Feedbee\RtStat\Drivers\Linux;
 
 class MemoryInfo
 {
-	public static function get() {
+	public static function get()
+	{
 		$memoryStatFile = "/proc/meminfo";
 		$lines = file($memoryStatFile);
 

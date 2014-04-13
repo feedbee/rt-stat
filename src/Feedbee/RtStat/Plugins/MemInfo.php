@@ -6,11 +6,13 @@ use Feedbee\RtStat\Drivers\Linux\MemoryInfo;
 
 class MemInfo
 {
-	public function getName() {
+	public function getName()
+	{
 		return "meminfo";
 	}
 
-	public function getData() {
+	public function getData()
+	{
 		$data = MemoryInfo::get();
 		$values = [];
 		foreach ($data as $k => $item) {
