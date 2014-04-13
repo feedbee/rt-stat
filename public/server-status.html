@@ -9,7 +9,7 @@
 <body>
 <div id="wrapper">
     <div id="server-status-header">
-        <h1>Server Status</h1>
+        <h1>Server Status [<span id="status">Disconnected</span>]</h1>
         <label for="server">Server</label> <input id="server" type="text" style="width:150px;" value="localhost"/>
         <button id="start">Start</button>
         <button id="stop">Stop</button>
@@ -199,20 +199,39 @@
         client.setInterval($('#interval-value').val());
     };
 
-    $('#start').on('click', function () {
+    var statusBlock = $('#status');
+    var wantToBeConnected = false;
+    var connect = function () {
+        statusBlock.text('Connecting...');
         client.connect({
             uri: "ws://" + serverAddress + "/",
             onOpenCallback: function () {
+                $('#status').text('Connected');
                 setIntervalCallback();
                 client.start();
             },
             onErrorCallback: function (data) {
-                alert('WebSockets error: ' + data);
+//                alert('WebSockets error: ' + data);
+            },
+            onCloseCallback: function () {
+                if (wantToBeConnected) {
+                    statusBlock.text('Disconnected. Trying to connect...');
+                    setTimeout(connect, 1000);
+                } else {
+                    statusBlock.text('Disconnected');
+                }
             }
         });
+    };
+    $('#start').on('click', function () {
+        wantToBeConnected = true;
+        connect();
     });
     $('#stop').on('click', function () {
-        client.stop();
+        wantToBeConnected = false;
+        if (client.isConnected()) {
+            client.stop();
+        }
         client.disconnect();
     });
     $('#interval').on('click', setIntervalCallback);

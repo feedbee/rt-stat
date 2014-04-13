@@ -1,5 +1,6 @@
 AgentServerClient = function (pushCallback) {
     var webSocket;
+    var connected = false;
 
     this.connect = function (config) {
         if (!config) {
@@ -21,12 +22,14 @@ AgentServerClient = function (pushCallback) {
         };
         webSocket.onclose = function () {
             console.log("Socket closed");
+            connected = false;
             if (config.onCloseCallback) {
                 config.onCloseCallback.call(this);
             }
         };
         webSocket.onopen = function () {
             console.log("Connected...");
+            connected = true;
             if (config.onOpenCallback) {
                 config.onOpenCallback.call(this);
             }
@@ -66,4 +69,8 @@ AgentServerClient = function (pushCallback) {
     this.setInterval = function (interval) {
         sendCommand("interval", [interval]);
     };
+
+    this.isConnected = function () {
+        return connected;
+    }
 };
