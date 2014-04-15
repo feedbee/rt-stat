@@ -14,16 +14,20 @@ body {
     background-color: white;
 }
 
-#server-status-header {
+.server-header {
     margin-bottom: 10px;
 }
 
-#server-status-header h1 {
+.server-header h1 {
     margin-bottom: 4px;
 }
 
-#canvas {
-    padding-top: 120px;
+.server-header input.server-host {
+	width: 150px;
+}
+
+.server-header input.server-interval {
+	width: 40px;
 }
 
 .data {
@@ -37,7 +41,7 @@ body {
     height: 20px;
 }
 
-#processors canvas {
+.server-processors canvas {
     width: 260px;
 }
 
