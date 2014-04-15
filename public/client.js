@@ -1,4 +1,7 @@
-AgentServerClient = function (pushCallback) {
+if (typeof(RtStat) != "undefined") {
+    RtStat = {};
+}
+RtStat.WebSocketClient = function (pushCallback) {
     var webSocket;
     var connected = false;
 

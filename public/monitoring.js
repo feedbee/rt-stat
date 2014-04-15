@@ -1,4 +1,6 @@
-RtStat = {};
+if (typeof(RtStat) != "undefined") {
+    RtStat = {};
+}
 RtStat.Monitoring = function (config) {
     //private methods
     var createCol = function (index) {
@@ -152,7 +154,7 @@ RtStat.Monitoring = function (config) {
             }
         };
 
-        var client = new AgentServerClient(function (msg) {
+        var client = new RtStat.WebSocketClient(function (msg) {
             var jsonResponce = JSON.parse(msg);
             cpuStat(jsonResponce.cpu_stat);
             memInfo(jsonResponce.meminfo);
