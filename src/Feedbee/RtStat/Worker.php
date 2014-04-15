@@ -40,11 +40,23 @@ class Worker
 	 */
 	private $pushTimer;
 
-	public function __construct(ConnectionInterface $connection, LoopInterface $loop, array $plugins, LoggerInterface $logger = null)
+	/**
+	 * @var bool
+	 */
+	private $authorized = false;
+
+	/**
+	 * @var null|string
+	 */
+	private $authToken;
+
+	public function __construct(ConnectionInterface $connection, LoopInterface $loop, array $plugins, $authToken = null,
+								LoggerInterface $logger = null)
 	{
 		$this->connection = $connection;
 		$this->loop = $loop;
 		$this->plugins = $plugins;
+		$this->authToken = $authToken;
 		$this->logger = $logger;
 	}
 
@@ -79,9 +91,26 @@ class Worker
 			return;
 		}
 
-		$parts = explode('::', $message);
+		$parts = explode('::', trim($message));
 		$command = $parts[0];
+		if (!is_null($this->authToken) && !$this->authorized
+			&& in_array($command, array('start', 'stop', 'interval')))
+		{
+			$this->sendError("Not authorized");
+			return;
+		}
 		switch ($command) {
+			case 'auth':
+				if (count($parts) < 2) {
+					$this->sendError("Auth message has 1 required parameter: string token (not set)");
+					return;
+				}
+				$this->authorized = (!is_null($this->authToken) && $this->authToken == $parts[1]);
+				if (!$this->authorized) {
+					$this->sendError("Auth failed");
+					return;
+				}
+				break;
 			case 'start':
 				if ($this->pushTimer) {
 					$this->sendError("Already started");

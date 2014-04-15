@@ -21,7 +21,8 @@ class Server
 
 	private $logger;
 
-	public function __construct(LoggerInterface $logger = null, $port = 8000, $address = '0.0.0.0', $type = self::TYPE_RAW)
+	public function __construct(LoggerInterface $logger = null, $port = 8000, $address = '0.0.0.0', $authToken,
+								$type = self::TYPE_RAW)
 	{
 		$this->logger = $logger;
 		$logger && $this->logger->info("Server config: {$address}:{$port} ({$type})");
@@ -31,7 +32,7 @@ class Server
 		$socket = new SocketServer($loop);
 		$socket->listen($port, $address);
 
-		$messageComponent = new MessageComponent($loop, $logger);
+		$messageComponent = new MessageComponent($loop, $authToken, $logger);
 
 		if ($type == self::TYPE_WEB_SOCKET) {
 			$messageComponent = new HttpServer(new WsServer($messageComponent));

@@ -35,6 +35,13 @@ class ServerCommand extends Command
 			)
 
 			->addOption(
+				'auth-token',
+				'a',
+				InputOption::VALUE_REQUIRED,
+				'Enter auth token. If token entered, all command requires authorization. Default is no authorization.'
+			)
+
+			->addOption(
 				'web-sockets',
 				'w',
 				InputOption::VALUE_NONE,
@@ -47,6 +54,7 @@ class ServerCommand extends Command
 		$interface = '0.0.0.0';
 		$port = 8000;
 		$type = Server::TYPE_RAW;
+		$authToken = null;
 		if ($i = $input->getOption('interface')) {
 			$interface = $i;
 		}
@@ -55,6 +63,9 @@ class ServerCommand extends Command
 		}
 		if ($input->getOption('web-sockets')) {
 			$type = Server::TYPE_WEB_SOCKET;
+		}
+		if ($a = $input->getOption('auth-token')) {
+			$authToken = $a;
 		}
 
 		$logger = null;
@@ -72,7 +83,7 @@ class ServerCommand extends Command
 			$logger->pushHandler(new StreamHandler('php://stderr', $level));
 		}
 
-		$server = new Server($logger, $port, $interface, $type);
+		$server = new Server($logger, $port, $interface, $authToken, $type);
 		$server->run();
 	}
 }

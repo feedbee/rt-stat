@@ -28,17 +28,23 @@ class MessageComponent implements MessageComponentInterface
 	 */
 	private $loop;
 
-	public function __construct(LoopInterface $loop, LoggerInterface $logger = null)
+	/**
+	 * @var null|string
+	 */
+	private $authToken;
+
+	public function __construct(LoopInterface $loop, $authToken = null, LoggerInterface $logger = null)
 	{
 		$this->loop = $loop;
 		$this->logger = $logger;
+		$this->authToken = $authToken;
 	}
 
 	public function onOpen(ConnectionInterface $connection)
 	{
 		$this->logger && $this->logger->debug('MessageComponent::onOpen');
 
-		$worker = new Worker($connection, $this->loop, $this->getDefaultPlugins(), $this->logger);
+		$worker = new Worker($connection, $this->loop, $this->getDefaultPlugins(), $this->authToken, $this->logger);
 		$this->workers[spl_object_hash($connection)] = $worker;
 		$worker->open();
 	}
