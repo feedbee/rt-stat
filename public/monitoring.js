@@ -28,7 +28,7 @@ RtStat.Monitoring = function (config) {
         return block;
     };
 
-    var init = function (serverId) {
+    var init = function (serverId, autoStart) {
         var srvPref = function (id) {
             return "server-" + serverId + "-" + id;
         };
@@ -168,10 +168,6 @@ RtStat.Monitoring = function (config) {
             serverAddress += ":8000";
         }
 
-        var setIntervalCallback = function () {
-            client.setInterval($(srvPref$('interval')).val());
-        };
-
         var statusBlock = $(srvPref$('status'));
         var wantToBeConnected = false;
         var connect = function () {
@@ -180,7 +176,7 @@ RtStat.Monitoring = function (config) {
                 uri: "ws://" + serverAddress + "/",
                 onOpenCallback: function () {
                     $(srvPref$('status')).text('Connected');
-                    setIntervalCallback();
+                    setInterval();
                     client.start();
                 },
                 onErrorCallback: function (data) {
@@ -196,18 +192,29 @@ RtStat.Monitoring = function (config) {
                 }
             });
         };
-        $(srvPref$('start-btn')).on('click', function () {
+
+        var start = function () {
             wantToBeConnected = true;
             connect();
-        });
-        $(srvPref$('stop-btn')).on('click', function () {
+        };
+        var stop = function () {
             wantToBeConnected = false;
             if (client.isConnected()) {
                 client.stop();
             }
             client.disconnect();
-        });
-        $(srvPref$('interval-btn')).on('click', setIntervalCallback);
+        };
+        var setInterval = function () {
+            client.setInterval($(srvPref$('interval')).val());
+        };
+
+        $(srvPref$('start-btn')).on('click', start);
+        $(srvPref$('stop-btn')).on('click', stop);
+        $(srvPref$('interval-btn')).on('click', setInterval);
+
+        if (autoStart) {
+            start();
+        }
     };
 
     // constructor
@@ -220,7 +227,7 @@ RtStat.Monitoring = function (config) {
         var serverConfig = config.servers[i];
         createServer(serverConfig.id, serverConfig.name, serverConfig.host, serverConfig.interval,
             cols[serverConfig.col - 1]);
-        init(serverConfig.id);
+        init(serverConfig.id, serverConfig.autoStart);
     }
 };
 
