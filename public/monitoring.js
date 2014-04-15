@@ -12,10 +12,15 @@ RtStat.Monitoring = function (config) {
         return block;
     };
 
-    var createServer = function (id, name, container) {
+    var createServer = function (id, name, host, interval, container) {
         var source   = $("#server-template").html();
         var template = Handlebars.compile(source);
-        var block = $(template({serverId: id, serverName: name}));
+        var block = $(template({
+            serverId: id,
+            serverName: name,
+            host: host,
+            interval: interval
+        }));
 
         var wrapper = $(container);
         wrapper.append(block);
@@ -213,7 +218,8 @@ RtStat.Monitoring = function (config) {
 
     for (i = 0; i < config.servers.length; i++) {
         var serverConfig = config.servers[i];
-        createServer(serverConfig.id, serverConfig.name, cols[serverConfig.col - 1]);
+        createServer(serverConfig.id, serverConfig.name, serverConfig.host, serverConfig.interval,
+            cols[serverConfig.col - 1]);
         init(serverConfig.id);
     }
 };
