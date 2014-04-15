@@ -42,10 +42,12 @@
             <div id="server-{{serverId}}-processors" class="indicator-block server-processors">
                 <h2>Processors</h2>
 
-                <div class="flex">
-                    <span id="server-{{serverId}}-processors-cpu0-label" class="label">cpu0</span>
-                    <canvas id="server-{{serverId}}-processors-cpu0" width="300" height="20"></canvas>
-                    <span id="server-{{serverId}}-processors-cpu0-value" class="value"></span>
+                <div id="server-{{serverId}}-processors-cpuX-template" class="template">
+                    <div class="flex">
+                        <span id="server-{{serverId}}-processors-\{{cpuId}}-label" class="label">\{{cpuId}}</span>
+                        <canvas id="server-{{serverId}}-processors-\{{cpuId}}" width="300" height="20"></canvas>
+                        <span id="server-{{serverId}}-processors-\{{cpuId}}-value" class="value"></span>
+                    </div>
                 </div>
             </div>
 

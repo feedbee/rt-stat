@@ -6,6 +6,10 @@ body {
 	display: flex;
 }
 
+.template {
+	display: none;
+}
+
 #header {
 	position: fixed;
 	background-color: white;

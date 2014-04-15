@@ -46,10 +46,9 @@ RtStat.Monitoring = function (config) {
 
                 var processorBlock = $(srvPref$('processors-' + key));
                 if (processorBlock.length < 1) {
-                    var newEl = $(srvPref$('processors')).append($('<div class="flex">'
-                        + '<span id="' + srvPref('processors-' + key + '-label') + '" class="label">' + key + '</span>'
-                        + '<canvas id="' + srvPref('processors-' + key) + '" width="300" height="20"></canvas>'
-                        + '<span id="' + srvPref('processors-' + key + '-value') + '" class="value"></span></div>'));
+                    var template = Handlebars.compile($(srvPref$('processors-cpuX-template')).html());
+                    var newEl =  $(template({cpuId: key}));
+                    $(srvPref$('processors')).append(newEl);
                     processorBlock = newEl.find(srvPref$('processors-' + key));
                 }
 
@@ -63,7 +62,6 @@ RtStat.Monitoring = function (config) {
 
                 var lastX = 0;
                 var width = canvas.width;
-                var height = canvas.height;
                 types.forEach(function (element) {
                     var value = data[element.key];
                     ctx.fillStyle = element.color;
