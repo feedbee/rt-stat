@@ -163,11 +163,27 @@ RtStat.Monitoring = function (config) {
         });
 
         var serverAddress = $(srvPref$('host')).val();
-        if (serverAddress.length < 1) {
-            serverAddress = 'localhost';
-        }
-        if (serverAddress.indexOf(':') < 0) {
-            serverAddress += ":8000";
+        var hostMatch = $(srvPref$('host')).val()
+            .match(/^((ws|wss):\/\/)?([a-zA-Z0-9\-\.]{1,63})(:(\d{1,5}))?(\/.*)?$/gi);
+        if (hostMatch) {
+            serverAddress = hostMatch[4]; // host
+            if (hostMatch[2]) { // protocol
+                serverAddress = hostMatch[2] + serverAddress;
+            } else {
+                serverAddress = 'ws://' + serverAddress;
+            }
+            if (hostMatch[5]) { // port
+                serverAddress += ":" + hostMatch[5];
+            } else {
+                serverAddress += ":8000";
+            }
+            if (hostMatch[6]) { // local part
+                serverAddress += hostMatch[6];
+            } else {
+                serverAddress += "/";
+            }
+        } else {
+            serverAddress = "ws://localhost:8000/";
         }
 
         var statusBlock = $(srvPref$('status'));
