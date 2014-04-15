@@ -9,10 +9,13 @@
 </head>
 <body>
 <div id="wrapper">
+    <script id="col-template" type="text/x-handlebars">
+        <div class="col" id="col-{{colIndex}}"></div>
+    </script>
     <script id="server-template" type="text/x-handlebars">
         <div class="server" id="server-{{serverId}}">
             <div class="server-header">
-                <h1>Server Status [<span id="server-{{serverId}}-status">Disconnected</span>]</h1>
+                <h1>{{serverName}} [<span id="server-{{serverId}}-status">Disconnected</span>]</h1>
                 <label for="server-{{serverId}}-host">Server</label>
                 <input id="server-{{serverId}}-host" class="server-host" type="text" value="localhost"/>
                 <button id="server-{{serverId}}-start-btn">Start</button>
@@ -69,13 +72,26 @@
 <script src="client.js"></script>
 
 <script>
-    function createServer(id) {
-        var source   = $("#server-template").html();
+    function createCol(index) {
+        var source   = $("#col-template").html();
         var template = Handlebars.compile(source);
-        var html = template({serverId: id});
+        var block = $(template({colIndex: index}));
 
         var wrapper = $('#wrapper');
-        wrapper.append($(html));
+        wrapper.append(block);
+
+        return block;
+    }
+
+    function createServer(id, name, container) {
+        var source   = $("#server-template").html();
+        var template = Handlebars.compile(source);
+        var block = $(template({serverId: id, serverName: name}));
+
+        var wrapper = $(container);
+        wrapper.append(block);
+
+        return block;
     }
 
     function init(serverId) {
@@ -262,8 +278,13 @@
         $(srvPref$('interval-btn')).on('click', setIntervalCallback);
     }
 
-    createServer('a1');
+    var c1 = createCol('1');
+    createServer('a1', 'Server A', c1);
     init('a1');
+
+    var c2 = createCol('2');
+    createServer('a2', 'Server B', c2);
+    init('a2');
 </script>
 </body>
 </html>

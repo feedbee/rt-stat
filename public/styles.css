@@ -2,16 +2,34 @@ body {
     margin: 0;
     padding: 0;
 }
-
-#wrapper {
-    max-width: 1200px;
-    min-width: 600px;
-    margin: 0 auto;
+.flex {
+	display: flex;
 }
 
 #header {
-    position: fixed;
-    background-color: white;
+	position: fixed;
+	background-color: white;
+}
+
+#wrapper {
+    min-width: 600px;
+	padding: 20px;
+    margin: 0 auto;
+	text-align: center;
+	display: table;
+	table-layout: fixed;
+}
+
+.col {
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	padding: 20px;
+	text-align: left;
+	display: table-cell;
+}
+
+.server {
+	width: 100%;
 }
 
 .server-header {
@@ -58,9 +76,6 @@ body {
     margin-bottom: 5px;
     font-family: 'Ubuntu Mono', Console, Consolas, Courier, 'Courier New', sans-serif;
     font-size: 95%;
-}
-.indicator-block > .flex {
-    display: flex;
 }
 
 .indicator-block .label, .indicator-block .value {
