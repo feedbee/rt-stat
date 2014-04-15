@@ -3,69 +3,81 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.2/handlebars.min.js"></script>
     <title>Server status — WebSockets Agent Client</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div id="wrapper">
-	<div class="server" id="server-a1">
-        <div class="server-header">
-            <h1>Server Status [<span id="server-a1-status">Disconnected</span>]</h1>
-            <label for="server-a1-host">Server</label>
-            <input id="server-a1-host" class="server-host" type="text" value="localhost"/>
-            <button id="server-a1-start-btn">Start</button>
-            <button id="server-a1-stop-btn">Stop</button>
-            <label for="server-a1-interval">Interval</label>
-            <input id="server-a1-interval" class="server-interval" type="text" value="1.5"/>
-            <button id="server-a1-interval-btn">Set interval</button>
-        </div>
-
-        <div id="server-a1-uptime" class="indicator-block">
-            <h2>Summary</h2>
-
-            <div>
-                Server time is <span id="server-a1-uptime-time">—</span>, uptime <span id="server-a1-uptime-uptime">—</span> min,
-                users <span id="server-a1-uptime-users">—</span>, LA <span id="server-a1-uptime-la1">—</span>; <span id="server-a1-uptime-la5">—</span>;
-                <span id="server-a1-uptime-la15">—</span>
+    <script id="server-template" type="text/x-handlebars">
+        <div class="server" id="server-{{serverId}}">
+            <div class="server-header">
+                <h1>Server Status [<span id="server-{{serverId}}-status">Disconnected</span>]</h1>
+                <label for="server-{{serverId}}-host">Server</label>
+                <input id="server-{{serverId}}-host" class="server-host" type="text" value="localhost"/>
+                <button id="server-{{serverId}}-start-btn">Start</button>
+                <button id="server-{{serverId}}-stop-btn">Stop</button>
+                <label for="server-{{serverId}}-interval">Interval</label>
+                <input id="server-{{serverId}}-interval" class="server-interval" type="text" value="1.5"/>
+                <button id="server-{{serverId}}-interval-btn">Set interval</button>
             </div>
-            <div>
-                Processes: A:<span id="server-a1-processes-all">—</span>, R:<span id="server-a1-processes-running">—</span>,
-                S:<span id="server-a1-processes-sleep">—</span>, Z:<span id="server-a1-processes-zombie">—</span>
+
+            <div id="server-{{serverId}}-uptime" class="indicator-block">
+                <h2>Summary</h2>
+
+                <div>
+                    Server time is <span id="server-{{serverId}}-uptime-time">—</span>, uptime <span id="server-{{serverId}}-uptime-uptime">—</span> min,
+                    users <span id="server-{{serverId}}-uptime-users">—</span>, LA <span id="server-{{serverId}}-uptime-l{{serverId}}">—</span>; <span id="server-{{serverId}}-uptime-la5">—</span>;
+                    <span id="server-{{serverId}}-uptime-l{{serverId}}5">—</span>
+                </div>
+                <div>
+                    Processes: A:<span id="server-{{serverId}}-processes-all">—</span>, R:<span id="server-{{serverId}}-processes-running">—</span>,
+                    S:<span id="server-{{serverId}}-processes-sleep">—</span>, Z:<span id="server-{{serverId}}-processes-zombie">—</span>
+                </div>
+            </div>
+
+            <div id="server-{{serverId}}-processors" class="indicator-block server-processors">
+                <h2>Processors</h2>
+
+                <div class="flex">
+                    <span id="server-{{serverId}}-processors-cpu0-label" class="label">cpu0</span>
+                    <canvas id="server-{{serverId}}-processors-cpu0" width="300" height="20"></canvas>
+                    <span id="server-{{serverId}}-processors-cpu0-value" class="value"></span>
+                </div>
+            </div>
+
+            <div id="server-{{serverId}}-memory" class="indicator-block">
+                <h2>Memory</h2>
+
+                <div class="flex">
+                    <canvas id="server-{{serverId}}-memory-canvas" width="300" height="20"></canvas>
+                    <span id="server-{{serverId}}-memory-value" class="value"></span>
+                </div>
+            </div>
+
+            <div id="server-{{serverId}}-swap" class="indicator-block">
+                <h2>Swap</h2>
+
+                <div class="flex">
+                    <canvas id="server-{{serverId}}-swap-canvas" width="300" height="20"></canvas>
+                    <span id="server-{{serverId}}-swap-value" class="value"></span>
+                </div>
             </div>
         </div>
-
-        <div id="server-a1-processors" class="indicator-block server-processors">
-            <h2>Processors</h2>
-
-            <div class="flex">
-                <span id="server-a1-processors-cpu0-label" class="label">cpu0</span>
-                <canvas id="server-a1-processors-cpu0" width="300" height="20"></canvas>
-                <span id="server-a1-processors-cpu0-value" class="value"></span>
-            </div>
-        </div>
-
-        <div id="server-a1-memory" class="indicator-block">
-            <h2>Memory</h2>
-
-            <div class="flex">
-                <canvas id="server-a1-memory-canvas" width="300" height="20"></canvas>
-                <span id="server-a1-memory-value" class="value"></span>
-            </div>
-        </div>
-
-        <div id="server-a1-swap" class="indicator-block">
-            <h2>Swap</h2>
-
-            <div class="flex">
-                <canvas id="server-a1-swap-canvas" width="300" height="20"></canvas>
-                <span id="server-a1-swap-value" class="value"></span>
-            </div>
-        </div>
-    </div>
+    </script>
 </div>
 <script src="client.js"></script>
 
 <script>
+    function createServer(id) {
+        var source   = $("#server-template").html();
+        var template = Handlebars.compile(source);
+        var html = template({serverId: id});
+
+        var wrapper = $('#wrapper');
+        wrapper.append($(html));
+    }
+
     function init(serverId) {
         var srvPref = function (id) {
             return "server-" + serverId + "-" + id;
@@ -250,6 +262,7 @@
         $(srvPref$('interval-btn')).on('click', setIntervalCallback);
     }
 
+    createServer('a1');
     init('a1');
 </script>
 </body>
