@@ -211,6 +211,15 @@ RtStat.Monitoring = function (config) {
         $(srvPref$('start-btn')).on('click', start);
         $(srvPref$('stop-btn')).on('click', stop);
         $(srvPref$('interval-btn')).on('click', setInterval);
+        $(srvPref$('options-btn')).on('click', function () {
+            $(srvPref$('options')).toggle();
+            var t = $(this);
+            if (t.text() == 'Options') {
+                t.text('Hide options');
+            } else {
+                t.text('Options');
+            }
+        });
 
         if (autoStart) {
             start();

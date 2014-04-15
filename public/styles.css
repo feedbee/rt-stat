@@ -44,6 +44,13 @@ body {
     margin-bottom: 4px;
 }
 
+.server-header .server-options {
+	display: none;
+	border: 4px solid #656565;
+	margin-top: 5px;
+	padding: 5px;
+}
+
 .server-header input.server-host {
 	width: 150px;
 }

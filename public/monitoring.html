@@ -15,14 +15,20 @@
     <script id="server-template" type="text/x-handlebars">
         <div class="server" id="server-{{serverId}}">
             <div class="server-header">
-                <h1>{{serverName}} [<span id="server-{{serverId}}-status">Disconnected</span>]</h1>
-                <label for="server-{{serverId}}-host">Server</label>
-                <input id="server-{{serverId}}-host" class="server-host" type="text" value="{{host}}"/>
-                <button id="server-{{serverId}}-start-btn">Start</button>
-                <button id="server-{{serverId}}-stop-btn">Stop</button>
-                <label for="server-{{serverId}}-interval">Interval</label>
-                <input id="server-{{serverId}}-interval" class="server-interval" type="text" value="{{interval}}"/>
-                <button id="server-{{serverId}}-interval-btn">Set interval</button>
+                <h1>{{serverName}} </h1>
+                <div class="server-status-bar">
+                    [<span id="server-{{serverId}}-status">Disconnected</span>]
+                    <button id="server-{{serverId}}-options-btn">Options</button>
+                </div>
+                <div id="server-{{serverId}}-options" class="server-options">
+                    <label for="server-{{serverId}}-host">Server</label>
+                    <input id="server-{{serverId}}-host" class="server-host" type="text" value="{{host}}"/>
+                    <button id="server-{{serverId}}-start-btn">Start</button>
+                    <button id="server-{{serverId}}-stop-btn">Stop</button>
+                    <label for="server-{{serverId}}-interval">Interval</label>
+                    <input id="server-{{serverId}}-interval" class="server-interval" type="text" value="{{interval}}"/>
+                    <button id="server-{{serverId}}-interval-btn">Set interval</button>
+                </div>
             </div>
 
             <div id="server-{{serverId}}-uptime" class="indicator-block">
