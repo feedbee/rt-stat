@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.2/handlebars.min.js"></script>
+    <title>Servers Monitoring</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="wrapper">
+    <script id="col-template" type="text/x-handlebars">
+        <div class="col" id="col-{{colIndex}}"></div>
+    </script>
+    <script id="server-template" type="text/x-handlebars">
+        <div class="server" id="server-{{serverId}}">
+            <div class="server-header">
+                <h1>{{serverName}} [<span id="server-{{serverId}}-status">Disconnected</span>]</h1>
+                <label for="server-{{serverId}}-host">Server</label>
+                <input id="server-{{serverId}}-host" class="server-host" type="text" value="localhost"/>
+                <button id="server-{{serverId}}-start-btn">Start</button>
+                <button id="server-{{serverId}}-stop-btn">Stop</button>
+                <label for="server-{{serverId}}-interval">Interval</label>
+                <input id="server-{{serverId}}-interval" class="server-interval" type="text" value="1.5"/>
+                <button id="server-{{serverId}}-interval-btn">Set interval</button>
+            </div>
+
+            <div id="server-{{serverId}}-uptime" class="indicator-block">
+                <h2>Summary</h2>
+
+                <div>
+                    Server time is <span id="server-{{serverId}}-uptime-time">—</span>, uptime <span id="server-{{serverId}}-uptime-uptime">—</span> min,
+                    users <span id="server-{{serverId}}-uptime-users">—</span>, LA <span id="server-{{serverId}}-uptime-l{{serverId}}">—</span>; <span id="server-{{serverId}}-uptime-la5">—</span>;
+                    <span id="server-{{serverId}}-uptime-l{{serverId}}5">—</span>
+                </div>
+                <div>
+                    Processes: A:<span id="server-{{serverId}}-processes-all">—</span>, R:<span id="server-{{serverId}}-processes-running">—</span>,
+                    S:<span id="server-{{serverId}}-processes-sleep">—</span>, Z:<span id="server-{{serverId}}-processes-zombie">—</span>
+                </div>
+            </div>
+
+            <div id="server-{{serverId}}-processors" class="indicator-block server-processors">
+                <h2>Processors</h2>
+
+                <div class="flex">
+                    <span id="server-{{serverId}}-processors-cpu0-label" class="label">cpu0</span>
+                    <canvas id="server-{{serverId}}-processors-cpu0" width="300" height="20"></canvas>
+                    <span id="server-{{serverId}}-processors-cpu0-value" class="value"></span>
+                </div>
+            </div>
+
+            <div id="server-{{serverId}}-memory" class="indicator-block">
+                <h2>Memory</h2>
+
+                <div class="flex">
+                    <canvas id="server-{{serverId}}-memory-canvas" width="300" height="20"></canvas>
+                    <span id="server-{{serverId}}-memory-value" class="value"></span>
+                </div>
+            </div>
+
+            <div id="server-{{serverId}}-swap" class="indicator-block">
+                <h2>Swap</h2>
+
+                <div class="flex">
+                    <canvas id="server-{{serverId}}-swap-canvas" width="300" height="20"></canvas>
+                    <span id="server-{{serverId}}-swap-value" class="value"></span>
+                </div>
+            </div>
+        </div>
+    </script>
+</div>
+<script src="client.js"></script>
+<script src="monitoring.js"></script>
+
+<script>
+    RtStat.Monitoring.init({
+        cols: 2,
+        servers: [
+            {
+                id: 'a',
+                name: 'Server A',
+                col: 1
+            },
+            {
+                id: 'b',
+                name: 'Server B',
+                col: 2
+            }
+        ]
+    });
+</script>
+</body>
+</html>
