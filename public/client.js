@@ -73,6 +73,10 @@ RtStat.WebSocketClient = function (pushCallback) {
         sendCommand("interval", [interval]);
     };
 
+    this.requestVersion = function () {
+        sendCommand("version");
+    };
+
     this.isConnected = function () {
         return connected;
     }

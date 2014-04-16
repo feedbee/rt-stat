@@ -145,6 +145,9 @@ class Worker
 				}
 				$this->setInterval($arg);
 				break;
+			case 'version':
+				$this->send("Version::" . Application::VERSION);
+				break;
 			case 'quit':
 			case 'exit':
 				$this->quit();
