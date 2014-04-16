@@ -58,6 +58,12 @@ class ServerCommand extends Command
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
+		if ('0' !== ($overloading = ini_get('mbstring.func_overload'))) {
+			$output->writeln("<error>PHP option mbstring.func_overload set to {$overloading}. It breaks the server, exit. "
+				. "Check php.ini and set mbstring.func_overload to 0.</error>");
+			exit(1);
+		}
+
 		$interface = '0.0.0.0';
 		$port = 8000;
 		$type = Server::TYPE_RAW;
