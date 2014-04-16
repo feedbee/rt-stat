@@ -1,4 +1,14 @@
 {
+    "name": "feedbee/rt-stat",
+    "homepage": "https://github.com/feedbee/rt-stat",
+    "license": "BSD (3-Clause) License",
+    "authors": [
+        {
+            "name": "Valera Leontyev",
+            "email": "feedbee@gmail.com"
+        }
+    ],
+
     "autoload": {
         "psr-0": {
             "Feedbee\\RtStat": "src"
