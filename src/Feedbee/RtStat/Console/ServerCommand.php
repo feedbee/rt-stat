@@ -78,7 +78,7 @@ class ServerCommand extends Command
 			}
 			$port = (int)$p;
 		}
-		if (null !== ($input->getOption('web-sockets'))) {
+		if (true === ($input->getOption('web-sockets'))) {
 			$type = Server::TYPE_WEB_SOCKET;
 		}
 		if (null !== ($a = $input->getOption('auth-token'))) {
