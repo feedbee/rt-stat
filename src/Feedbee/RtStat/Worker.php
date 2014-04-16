@@ -93,19 +93,34 @@ class Worker
 
 		$parts = explode('::', trim($message));
 		$command = strtolower($parts[0]);
+
 		if (!is_null($this->authToken) && !$this->authorized
 			&& in_array($command, array('start', 'stop', 'interval')))
 		{
 			$this->sendError("Not authorized");
 			return;
 		}
+
+		$args = [];
+		if (count($parts) > 1) {
+			for ($i = 1; $i < count($parts); $i++) {
+				$part = $parts[$i];
+				$args[$part];
+				while (count($part) > 0 && substr($part, strlen($part) - 1) == '\\'
+					&& (substr($part, strlen($part) - 2, 1) != '\\' || count($part) < 2))
+				{
+					$args[] = '::' . ($i + 1 < count($parts) ? $parts[$i + 1] : '');
+				}
+			}
+		}
+
 		switch ($command) {
 			case 'auth':
-				if (count($parts) < 2) {
+				if (count($args) < 1) {
 					$this->sendError("Auth message has 1 required parameter: string token (not set)");
 					return;
 				}
-				$this->authorized = (!is_null($this->authToken) && $this->authToken == $parts[1]);
+				$this->authorized = (!is_null($this->authToken) && $this->authToken == $args[0]);
 				if (!$this->authorized) {
 					$this->sendError("Auth failed");
 					return;
@@ -130,12 +145,12 @@ class Worker
 				$this->stop();
 				break;
 			case 'interval':
-				if (count($parts) < 2) {
+				if (count($args) < 1) {
 					$this->sendError("Interval message has 1 required parameter: int interval (not set)");
 					return;
 				}
-				$arg = (float)$parts[1];
-				if ($parts[1] != $arg || $arg == 0) {
+				$arg = (float)$args[0];
+				if ($args[0] != $arg || $arg == 0) {
 					$this->sendError("Interval message has 1 required parameter: int interval (not positive float)");
 					return;
 				}
@@ -197,10 +212,22 @@ class Worker
 		$this->connection->send($text . "\n");
 	}
 
+	private function sendCommand($command, array $args)
+	{
+		$argsEscaped = array_map(function ($value) {
+			return str_replace('::', '\::', $value);
+		}, $args);
+		$text = implode('::', $argsEscaped);
+
+		$this->logger->debug("Worker::sendCommand {$command}::{$text}");
+
+		$this->send("{$command}::{$text}");
+	}
+
 	private function sendError($text)
 	{
 		$this->logger->debug("Worker::sendError {$text}");
 
-		$this->send("Error::" . $text);
+		$this->sendCommand('Error', [$text]);
 	}
 }
