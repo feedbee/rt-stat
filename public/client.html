@@ -26,15 +26,14 @@
 </div>
 <script src="client.js"></script>
 <script>
-    var client = new RtStat.WebSocketClient();
+    var client = new RtStat.WebSocketClient({
+        onMessageCallback: function (msg) {
+            $('#canvas').prepend("<div class=\"data\">" + msg + "</div>");
+        }
+    });
 
     $('#connect').on('click', function () {
-        client.connect({
-            onMessageCallback: function (msg) {
-                $('#canvas').prepend("<div class=\"data\">" + msg + "</div>");
-            },
-            uri: $('#host').val()
-        });
+        client.connect($('#host').val());
     });
     $('#start').on('click', client.start);
     $('#stop').on('click', client.stop);

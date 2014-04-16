@@ -1,21 +1,22 @@
 if (typeof(RtStat) == "undefined") {
     RtStat = {};
 }
-RtStat.WebSocketClient = function (onCmdCallback) {
+RtStat.WebSocketClient = function (config) {
     var webSocket;
     var connected = false;
 
     var responseCommands = ['welcome', 'error', 'push', 'version'];
 
-    this.connect = function (config) {
-        if (!config) {
-            config = {};
-        }
-        if (!config.uri) {
-            config.uri = "ws://localhost:8000/";
+    if (!config) {
+        config = {};
+    }
+
+    this.connect = function (uri) {
+        if (!uri) {
+            uri = "ws://localhost:8000/";
         }
 
-        webSocket = new WebSocket(config.uri);
+        webSocket = new WebSocket(uri);
         webSocket.onmessage = function (event) {
             var data = event.data.trim();
             console.log("Message: " + data);
@@ -24,7 +25,7 @@ RtStat.WebSocketClient = function (onCmdCallback) {
                 config.onMessageCallback.call(this, data);
             }
 
-            if (onCmdCallback) {
+            if (config.onCmdCallback) {
                 var dataParts = data.split('::');
                 var cmd = dataParts[0].toLowerCase();
                 if (responseCommands.indexOf(dataParts[0].toLowerCase()) != -1)
@@ -39,7 +40,7 @@ RtStat.WebSocketClient = function (onCmdCallback) {
                             args.push('::' + (i + 1 < dataParts.length ? dataParts[i + 1] : ''));
                         }
                     }
-                    onCmdCallback(cmd, args);
+                    config.onCmdCallback(cmd, args);
                 }
             }
         };

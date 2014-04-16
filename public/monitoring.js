@@ -156,17 +156,39 @@ RtStat.Monitoring = function (config) {
             }
         };
 
-        var client = new RtStat.WebSocketClient(function (cmd, args) {
-            if (cmd == 'push') {
-                if (args.length > 0) {
-                    console.log('Error: push command with out arguments');
+        var client = new RtStat.WebSocketClient({
+            onCmdCallback: function (cmd, args) {
+                if (cmd == 'push') {
+                    if (args.length > 0) {
+                        console.log('Error: push command with out arguments');
+                    }
+                    var msg = args[0];
+                    var jsonResponce = JSON.parse(msg);
+                    cpuStat(jsonResponce.cpu_stat);
+                    memInfo(jsonResponce.meminfo);
+                    uptime(jsonResponce.uptime);
+                    processes(jsonResponce.processes);
                 }
-                var msg = args[0];
-                var jsonResponce = JSON.parse(msg);
-                cpuStat(jsonResponce.cpu_stat);
-                memInfo(jsonResponce.meminfo);
-                uptime(jsonResponce.uptime);
-                processes(jsonResponce.processes);
+            },
+            onOpenCallback: function () {
+                $(srvPref$('status')).text('Connected');
+                var token = $(srvPref$('token')).val();
+                if (token) {
+                    client.authenticate(token);
+                }
+                setInterval();
+                client.start();
+            },
+            onErrorCallback: function (data) {
+//                alert('WebSockets error: ' + data);
+            },
+            onCloseCallback: function () {
+                if (wantToBeConnected) {
+                    statusBlock.text('Disconnected. Trying to connect...');
+                    setTimeout(connect, 1000);
+                } else {
+                    statusBlock.text('Disconnected');
+                }
             }
         });
 
@@ -199,29 +221,7 @@ RtStat.Monitoring = function (config) {
                 wsUri = "ws://localhost:8000/";
             }
 
-            client.connect({
-                uri: wsUri,
-                onOpenCallback: function () {
-                    $(srvPref$('status')).text('Connected');
-                    var token = $(srvPref$('token')).val();
-                    if (token) {
-                        client.authenticate(token);
-                    }
-                    setInterval();
-                    client.start();
-                },
-                onErrorCallback: function (data) {
-//                alert('WebSockets error: ' + data);
-                },
-                onCloseCallback: function () {
-                    if (wantToBeConnected) {
-                        statusBlock.text('Disconnected. Trying to connect...');
-                        setTimeout(connect, 1000);
-                    } else {
-                        statusBlock.text('Disconnected');
-                    }
-                }
-            });
+            client.connect(wsUri);
         };
 
         var start = function () {
