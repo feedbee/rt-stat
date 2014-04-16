@@ -47,26 +47,26 @@ RtStat.WebSocketClient = function (pushCallback) {
 
     this.disconnect = function () {
         webSocket.close();
-    };
-
-    this.stop = function () {
-        webSocket.close();
         console.log("Disconnected...");
     };
 
     var sendCommand = function (command, agrs) {
-        var argsStr = agrs ? '::' + agrs.join(',') : '';
+        var argsStr = agrs ? '::' + agrs.join('::') : '';
         var cmdStr = command + argsStr;
         webSocket.send(cmdStr);
         console.log("Command: " + cmdStr);
     };
 
-    this.stop = function () {
-        sendCommand("stop");
+    this.authenticate = function (token) {
+        sendCommand("auth", [token]);
     };
 
     this.start = function () {
         sendCommand("start");
+    };
+
+    this.stop = function () {
+        sendCommand("stop");
     };
 
     this.setInterval = function (interval) {

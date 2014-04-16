@@ -59,6 +59,12 @@ body {
 	width: 40px;
 }
 
+.server-header input.server-token {
+	min-width: 200px;
+	max-width: 500px;
+	width: 60%;
+}
+
 .data {
     margin: 5px 0;
 }

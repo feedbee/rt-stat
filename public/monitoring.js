@@ -14,14 +14,15 @@ RtStat.Monitoring = function (config) {
         return block;
     };
 
-    var createServer = function (id, name, host, interval, container) {
+    var createServer = function (id, name, host, interval, token, container) {
         var source   = $("#server-template").html();
         var template = Handlebars.compile(source);
         var block = $(template({
             serverId: id,
             serverName: name,
             host: host,
-            interval: interval
+            interval: interval,
+            token: token
         }));
 
         var wrapper = $(container);
@@ -196,6 +197,10 @@ RtStat.Monitoring = function (config) {
                 uri: wsUri,
                 onOpenCallback: function () {
                     $(srvPref$('status')).text('Connected');
+                    var token = $(srvPref$('token')).val();
+                    if (token) {
+                        client.authenticate(token);
+                    }
                     setInterval();
                     client.start();
                 },
@@ -254,8 +259,14 @@ RtStat.Monitoring = function (config) {
 
     for (i = 0; i < config.servers.length; i++) {
         var serverConfig = config.servers[i];
-        createServer(serverConfig.id, serverConfig.name, serverConfig.host, serverConfig.interval,
-            cols[serverConfig.col - 1]);
+        createServer(
+            serverConfig.id,
+            serverConfig.name,
+            serverConfig.host,
+            serverConfig.interval,
+            serverConfig.token ? serverConfig.token : '',
+            cols[serverConfig.col - 1]
+        );
         init(serverConfig.id, serverConfig.autoStart);
     }
 };
