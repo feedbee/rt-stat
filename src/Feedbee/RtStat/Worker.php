@@ -92,7 +92,7 @@ class Worker
 		}
 
 		$parts = explode('::', trim($message));
-		$command = $parts[0];
+		$command = strtolower($parts[0]);
 		if (!is_null($this->authToken) && !$this->authorized
 			&& in_array($command, array('start', 'stop', 'interval')))
 		{

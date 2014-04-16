@@ -19,7 +19,7 @@ RtStat.WebSocketClient = function (pushCallback) {
             if (config.onMessageCallback) {
                 config.onMessageCallback.call(this, event.data);
             }
-            if (evt.data.indexOf('Push::') == 0) {
+            if (evt.data.toLowerCase().indexOf('push::') == 0) {
                 pushCallback(evt.data.substr(6));
             }
         };
