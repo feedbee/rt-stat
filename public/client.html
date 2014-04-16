@@ -23,7 +23,7 @@
 </div>
 <script src="client.js"></script>
 <script>
-    var client = new AgentServerClient(function (msg) {
+    var client = new RtStat.WebSocketClient(function (msg) {
         $('#canvas').prepend("<div class=\"data\">" + msg + "</div>");
     });
 
