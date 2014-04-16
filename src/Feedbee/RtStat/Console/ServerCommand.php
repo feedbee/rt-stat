@@ -42,6 +42,13 @@ class ServerCommand extends Command
 			)
 
 			->addOption(
+				'max-clients',
+				'c',
+				InputOption::VALUE_REQUIRED,
+				'Clients count limit (integer >0 or 0 for unlimited count). If token entered, all command requires authorization. Default is 10.'
+			)
+
+			->addOption(
 				'web-sockets',
 				'w',
 				InputOption::VALUE_NONE,
@@ -55,17 +62,35 @@ class ServerCommand extends Command
 		$port = 8000;
 		$type = Server::TYPE_RAW;
 		$authToken = null;
-		if ($i = $input->getOption('interface')) {
+		$maxClients = 10;
+		if (null !== ($i = $input->getOption('interface'))) {
 			$interface = $i;
 		}
-		if ($p = $input->getOption('port')) {
-			$port = $p;
+		if (null !== ($p = $input->getOption('port'))) {
+			if (!ctype_digit($p))
+			{
+				$output->writeln('<error>Error: port number must be positive integer</error>');
+				exit(1);
+			}
+			if ($p < 1 || $p > 65535) {
+				$output->writeln('<error>Error: port number must be between 1 and 65535</error>');
+				exit(1);
+			}
+			$port = (int)$p;
 		}
-		if ($input->getOption('web-sockets')) {
+		if (null !== ($input->getOption('web-sockets'))) {
 			$type = Server::TYPE_WEB_SOCKET;
 		}
-		if ($a = $input->getOption('auth-token')) {
+		if (null !== ($a = $input->getOption('auth-token'))) {
 			$authToken = $a;
+		}
+		if (null !== ($c = $input->getOption('max-clients'))) {
+			if (!ctype_digit($c))
+			{
+				$output->writeln('<error>Error: clients count must be integer equal or greater then 0</error>');
+				exit(1);
+			}
+			$maxClients = (int)$c;
 		}
 
 		$logger = null;
@@ -83,7 +108,7 @@ class ServerCommand extends Command
 			$logger->pushHandler(new StreamHandler('php://stderr', $level));
 		}
 
-		$server = new Server($logger, $port, $interface, $authToken, $type);
+		$server = new Server($logger, $port, $interface, $authToken, $maxClients, $type);
 		$server->run();
 	}
 }

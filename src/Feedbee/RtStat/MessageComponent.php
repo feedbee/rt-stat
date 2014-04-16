@@ -33,16 +33,29 @@ class MessageComponent implements MessageComponentInterface
 	 */
 	private $authToken;
 
-	public function __construct(LoopInterface $loop, $authToken = null, LoggerInterface $logger = null)
+	/**
+	 * @var int
+	 */
+	private $maxClients;
+
+	public function __construct(LoopInterface $loop, $authToken = null, LoggerInterface $logger = null, $maxClients = 1000)
 	{
 		$this->loop = $loop;
 		$this->logger = $logger;
 		$this->authToken = $authToken;
+		$this->maxClients = $maxClients;
 	}
 
 	public function onOpen(ConnectionInterface $connection)
 	{
 		$this->logger && $this->logger->debug('MessageComponent::onOpen');
+
+		if ($this->maxClients > 0 && count($this->workers) >= $this->maxClients) {
+			$this->logger && $this->logger->notice(
+				"MessageComponent: client maximum ({$this->maxClients}) reached, new connection terminated");
+			$connection->close();
+			return;
+		}
 
 		$worker = new Worker($connection, $this->loop, $this->getDefaultPlugins(), $this->authToken, $this->logger);
 		$this->workers[spl_object_hash($connection)] = $worker;
@@ -60,7 +73,11 @@ class MessageComponent implements MessageComponentInterface
 	{
 		$this->logger && $this->logger->debug('MessageComponent::onClose');
 
-		$this->workers[spl_object_hash($connection)]->stop();
+		$hash = spl_object_hash($connection);
+		if (isset($this->workers[$hash])) {
+			$this->workers[$hash]->stop();
+			unset($this->workers[spl_object_hash($connection)]);
+		}
 	}
 
 	public function onError(ConnectionInterface $connection, \Exception $e)
@@ -68,7 +85,6 @@ class MessageComponent implements MessageComponentInterface
 		$this->logger && $this->logger->debug("MessageComponent::onError: {$e->getMessage()}");
 
 		$connection->close();
-		unset($this->workers[spl_object_hash($connection)]);
 	}
 
 	private function getDefaultPlugins()
