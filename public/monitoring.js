@@ -14,14 +14,15 @@ RtStat.Monitoring = function (config) {
         return block;
     };
 
-    var createServer = function (id, name, host, interval, container) {
+    var createServer = function (id, name, host, interval, token, container) {
         var source   = $("#server-template").html();
         var template = Handlebars.compile(source);
         var block = $(template({
             serverId: id,
             serverName: name,
             host: host,
-            interval: interval
+            interval: interval,
+            token: token
         }));
 
         var wrapper = $(container);
@@ -163,38 +164,43 @@ RtStat.Monitoring = function (config) {
             processes(jsonResponce.processes);
         });
 
-        var wsUri = $(srvPref$('host')).val();
-        var hostMatch = $(srvPref$('host')).val()
-            .match(/^((ws|wss):\/\/)?([a-zA-Z0-9\-\.]{1,63})(:(\d{1,5}))?(\/.*)?$/i);
-        if (hostMatch) {
-            wsUri = hostMatch[3]; // host
-            if (hostMatch[2]) { // protocol
-                wsUri = hostMatch[2] + wsUri;
-            } else {
-                wsUri = 'ws://' + wsUri;
-            }
-            if (hostMatch[5]) { // port
-                wsUri += ":" + hostMatch[5];
-            } else {
-                wsUri += ":8000";
-            }
-            if (hostMatch[6]) { // local part
-                wsUri += hostMatch[6];
-            } else {
-                wsUri += "/";
-            }
-        } else {
-            wsUri = "ws://localhost:8000/";
-        }
-
         var statusBlock = $(srvPref$('status'));
         var wantToBeConnected = false;
         var connect = function () {
             statusBlock.text('Connecting...');
+
+            var wsUri = $(srvPref$('host')).val();
+            var hostMatch = $(srvPref$('host')).val()
+                .match(/^((ws|wss):\/\/)?([a-zA-Z0-9\-\.]{1,63})(:(\d{1,5}))?(\/.*)?$/i);
+            if (hostMatch) {
+                wsUri = hostMatch[3]; // host
+                if (hostMatch[2]) { // protocol
+                    wsUri = hostMatch[1] + wsUri;
+                } else {
+                    wsUri = 'ws://' + wsUri;
+                }
+                if (hostMatch[5]) { // port
+                    wsUri += ":" + hostMatch[5];
+                } else {
+                    wsUri += ":8000";
+                }
+                if (hostMatch[6]) { // local part
+                    wsUri += hostMatch[6];
+                } else {
+                    wsUri += "/";
+                }
+            } else {
+                wsUri = "ws://localhost:8000/";
+            }
+
             client.connect({
                 uri: wsUri,
                 onOpenCallback: function () {
                     $(srvPref$('status')).text('Connected');
+                    var token = $(srvPref$('token')).val();
+                    if (token) {
+                        client.authenticate(token);
+                    }
                     setInterval();
                     client.start();
                 },
@@ -253,8 +259,14 @@ RtStat.Monitoring = function (config) {
 
     for (i = 0; i < config.servers.length; i++) {
         var serverConfig = config.servers[i];
-        createServer(serverConfig.id, serverConfig.name, serverConfig.host, serverConfig.interval,
-            cols[serverConfig.col - 1]);
+        createServer(
+            serverConfig.id,
+            serverConfig.name,
+            serverConfig.host,
+            serverConfig.interval,
+            serverConfig.token ? serverConfig.token : '',
+            cols[serverConfig.col - 1]
+        );
         init(serverConfig.id, serverConfig.autoStart);
     }
 };
