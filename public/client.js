@@ -1,4 +1,4 @@
-if (typeof(RtStat) != "undefined") {
+if (typeof(RtStat) == "undefined") {
     RtStat = {};
 }
 RtStat.WebSocketClient = function (pushCallback) {

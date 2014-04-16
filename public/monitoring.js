@@ -1,4 +1,4 @@
-if (typeof(RtStat) != "undefined") {
+if (typeof(RtStat) == "undefined") {
     RtStat = {};
 }
 RtStat.Monitoring = function (config) {
@@ -163,28 +163,28 @@ RtStat.Monitoring = function (config) {
             processes(jsonResponce.processes);
         });
 
-        var serverAddress = $(srvPref$('host')).val();
+        var wsUri = $(srvPref$('host')).val();
         var hostMatch = $(srvPref$('host')).val()
-            .match(/^((ws|wss):\/\/)?([a-zA-Z0-9\-\.]{1,63})(:(\d{1,5}))?(\/.*)?$/gi);
+            .match(/^((ws|wss):\/\/)?([a-zA-Z0-9\-\.]{1,63})(:(\d{1,5}))?(\/.*)?$/i);
         if (hostMatch) {
-            serverAddress = hostMatch[4]; // host
+            wsUri = hostMatch[3]; // host
             if (hostMatch[2]) { // protocol
-                serverAddress = hostMatch[2] + serverAddress;
+                wsUri = hostMatch[2] + wsUri;
             } else {
-                serverAddress = 'ws://' + serverAddress;
+                wsUri = 'ws://' + wsUri;
             }
             if (hostMatch[5]) { // port
-                serverAddress += ":" + hostMatch[5];
+                wsUri += ":" + hostMatch[5];
             } else {
-                serverAddress += ":8000";
+                wsUri += ":8000";
             }
             if (hostMatch[6]) { // local part
-                serverAddress += hostMatch[6];
+                wsUri += hostMatch[6];
             } else {
-                serverAddress += "/";
+                wsUri += "/";
             }
         } else {
-            serverAddress = "ws://localhost:8000/";
+            wsUri = "ws://localhost:8000/";
         }
 
         var statusBlock = $(srvPref$('status'));
@@ -192,7 +192,7 @@ RtStat.Monitoring = function (config) {
         var connect = function () {
             statusBlock.text('Connecting...');
             client.connect({
-                uri: "ws://" + serverAddress + "/",
+                uri: wsUri,
                 onOpenCallback: function () {
                     $(srvPref$('status')).text('Connected');
                     setInterval();
