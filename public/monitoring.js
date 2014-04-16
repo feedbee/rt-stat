@@ -143,6 +143,7 @@ RtStat.Monitoring = function (config) {
                 }
                 $(srvPref$('uptime-' + key)).text(uptime[key]);
             }
+            $(srvPref$('title')).html( '[ <small>' + uptime.la1 + '</small> ' + uptime.la5 + ' ]');
         };
 
         var processes = function (processes) {
