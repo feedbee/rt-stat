@@ -139,6 +139,10 @@ class Worker
 					$this->sendError("Interval message has 1 required parameter: int interval (not positive float)");
 					return;
 				}
+				if ($arg < 0.5) {
+					$this->sendError("Interval message has must be equal or greater than 0.5");
+					return;
+				}
 				$this->setInterval($arg);
 				break;
 			case 'quit':
