@@ -26,19 +26,12 @@ RtStat.WebSocketClient = function (config) {
             }
 
             if (config.onCmdCallback) {
-                var dataParts = data.split('::');
+                var dataParts = data.split('::', 2);
                 var cmd = dataParts[0].toLowerCase();
-                if (responseCommands.indexOf(dataParts[0].toLowerCase()) != -1)
+                if (responseCommands.indexOf(cmd) != -1)
                 {
-                    var args = [];
-                    for (var i = 1; i < dataParts.length; i++) {
-                        var part = dataParts[i];
-                        args.push(part);
-                        while (part.length > 0 && part.substr(part.length - 1) == '\\'
-                            && (part.substr(part.length - 2, 1) != '\\' || part.length < 2))
-                        {
-                            args.push('::' + (i + 1 < dataParts.length ? dataParts[i + 1] : ''));
-                        }
+                    if (dataParts.length > 1) {
+                        var args = parseArgs(dataParts[1]);
                     }
                     config.onCmdCallback(cmd, args);
                 }
@@ -76,7 +69,7 @@ RtStat.WebSocketClient = function (config) {
         var args = arguments.length > 1 ? arguments[1] : [];
 
         var argsEscaped = args.map(function (value) {
-            return value.replace(/::/g, '\\::');
+            return value.replace(/(::|\\)/g, '\\$1').replace(/\n/g, '\\n');
         });
         var cmdStr = command + '::' + argsEscaped.join('::');
 
@@ -106,5 +99,37 @@ RtStat.WebSocketClient = function (config) {
 
     this.isConnected = function () {
         return connected;
-    }
+    };
+
+    var parseArgs = function (argsStr) {
+        if (argsStr.length < 1) {
+            return [];
+        }
+
+        var escapeMode = false;
+        var argsStack = [''];
+        for (var i = 0; i < argsStr.length; i++) {
+            var char = argsStr.substr(i, 1);
+
+            if (escapeMode) {
+                escapeMode = false;
+                if (char == 'n') {
+                    argsStack[argsStack.length - 1] += '\n';
+                } else {
+                    argsStack[argsStack.length - 1] += char;
+                }
+            } else {
+                if (char == '\\') {
+                    escapeMode = true;
+                } else if (char == ':' && i < argsStr.length - 1 && argsStr.substr(i + 1, 1) == ':') {
+                    argsStack.push('');
+                    i++;
+                } else {
+                    argsStack[argsStack.length - 1] += char;
+                }
+            }
+        }
+
+        return argsStack;
+    };
 };
