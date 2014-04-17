@@ -165,12 +165,12 @@ class Worker
 	}
 
 	static private function parseArgs($argsStr) {
-		if (strlen($argsStr) < 1) {
+		$length = strlen($argsStr);
+		if ($length < 1) {
 			return [];
 		}
 
 		$escapeMode = false;
-		$length = strlen($argsStr);
 		$argsStack = [''];
 		$lastArg =& $argsStack[0];
 		for ($i = 0; $i < $length; $i++) {
@@ -179,9 +179,7 @@ class Worker
 			if ($escapeMode) {
 				$escapeMode = false;
 				if ($char == 'n') {
-					$lastArg .= "\n";var_dump(99);
-				} else if ($char == '\\') {
-					$lastArg .= '\\';
+					$lastArg .= "\n";
 				} else {
 					$lastArg .= $char;
 				}
@@ -244,7 +242,7 @@ class Worker
 	private function sendCommand($command, array $args)
 	{
 		$argsEscaped = array_map(function ($value) {
-			return str_replace('::', '\::', str_replace("\n", '\\n', str_replace('\\\\', '\\', $value)));
+			return str_replace(["\n", '::'], ['\\n', '\::'], str_replace('\\\\', '\\', $value));
 		}, $args);
 		$text = implode('::', $argsEscaped);
 
