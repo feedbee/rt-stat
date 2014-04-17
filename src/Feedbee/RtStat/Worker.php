@@ -91,7 +91,7 @@ class Worker
 			return;
 		}
 
-		$parts = explode('::', trim($message));
+		$parts = explode('::', trim($message), 2);
 		$command = strtolower($parts[0]);
 
 		if (!is_null($this->authToken) && !$this->authorized
@@ -103,15 +103,7 @@ class Worker
 
 		$args = [];
 		if (count($parts) > 1) {
-			for ($i = 1; $i < count($parts); $i++) {
-				$part = $parts[$i];
-				$args[$part];
-				while (count($part) > 0 && substr($part, strlen($part) - 1) == '\\'
-					&& (substr($part, strlen($part) - 2, 1) != '\\' || count($part) < 2))
-				{
-					$args[] = '::' . ($i + 1 < count($parts) ? $parts[$i + 1] : '');
-				}
-			}
+			$args = static::parseArgs($parts[1]);
 		}
 
 		switch ($command) {
@@ -172,6 +164,43 @@ class Worker
 		}
 	}
 
+	static private function parseArgs($argsStr) {
+		if (strlen($argsStr) < 1) {
+			return [];
+		}
+
+		$escapeMode = false;
+		$length = strlen($argsStr);
+		$argsStack = [''];
+		$lastArg =& $argsStack[0];
+		for ($i = 0; $i < $length; $i++) {
+			$char = substr($argsStr, $i, 1);
+
+			if ($escapeMode) {
+				$escapeMode = false;
+				if ($char == 'n') {
+					$lastArg .= "\n";var_dump(99);
+				} else if ($char == '\\') {
+					$lastArg .= '\\';
+				} else {
+					$lastArg .= $char;
+				}
+			} else {
+				if ($char == '\\') {
+					$escapeMode = true;
+				} else if ($char == ':' && $i < $length - 1 && substr($argsStr, $i + 1, 1) == ':') {
+					$argsStack[] = '';
+					$lastArg =& $argsStack[count($argsStack) - 1];
+					$i++;
+				} else {
+					$lastArg .= $char;
+				}
+			}
+		}
+
+		return $argsStack;
+	}
+
 	public function setInterval($interval)
 	{
 		$this->logger->debug('Worker::setInterval');
@@ -215,7 +244,7 @@ class Worker
 	private function sendCommand($command, array $args)
 	{
 		$argsEscaped = array_map(function ($value) {
-			return str_replace('::', '\::', $value);
+			return str_replace('::', '\::', str_replace("\n", '\\n', str_replace('\\\\', '\\', $value)));
 		}, $args);
 		$text = implode('::', $argsEscaped);
 
