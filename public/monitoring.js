@@ -159,8 +159,8 @@ RtStat.Monitoring = function (config) {
         var client = new RtStat.WebSocketClient({
             onCmdCallback: function (cmd, args) {
                 if (cmd == 'push') {
-                    if (args.length > 0) {
-                        console.log('Error: push command with out arguments');
+                    if (args.length < 1) {
+                        console.log('Error: push command without arguments');
                     }
                     var msg = args[0];
                     var jsonResponce = JSON.parse(msg);

@@ -4,6 +4,7 @@ if (typeof(RtStat) == "undefined") {
 RtStat.WebSocketClient = function (config) {
     var webSocket;
     var connected = false;
+    var protocol;
 
     var responseCommands = ['welcome', 'error', 'push', 'version'];
 
@@ -12,28 +13,25 @@ RtStat.WebSocketClient = function (config) {
     }
 
     this.connect = function (uri) {
+        protocol = new RtStat.Protocol();
+
         if (!uri) {
             uri = "ws://localhost:8000/";
         }
 
         webSocket = new WebSocket(uri);
         webSocket.onmessage = function (event) {
-            var data = event.data.trim();
-            console.log("Message: " + data);
+            var message = event.data.trim();
+            console.log("Message received: " + message);
 
             if (config.onMessageCallback) {
-                config.onMessageCallback.call(this, data);
+                config.onMessageCallback.call(this, message);
             }
 
             if (config.onCmdCallback) {
-                var dataParts = data.split('::', 2);
-                var cmd = dataParts[0].toLowerCase();
-                if (responseCommands.indexOf(cmd) != -1)
-                {
-                    if (dataParts.length > 1) {
-                        var args = parseArgs(dataParts[1]);
-                    }
-                    config.onCmdCallback(cmd, args);
+                var messageParsed = protocol.parseMessage(message);
+                if (responseCommands.indexOf(messageParsed.command) != -1) {
+                    config.onCmdCallback(messageParsed.command, messageParsed.arguments);
                 }
             }
         };
@@ -65,16 +63,13 @@ RtStat.WebSocketClient = function (config) {
     };
 
     var sendCommand = function () {
-        var command = arguments.length > 0 ? arguments[0] : '';
+        var command = arguments.length > 0 ? arguments[0].toLowerCase() : '';
         var args = arguments.length > 1 ? arguments[1] : [];
 
-        var argsEscaped = args.map(function (value) {
-            return value.replace(/(::|\\)/g, '\\$1').replace(/\n/g, '\\n');
-        });
-        var cmdStr = command + '::' + argsEscaped.join('::');
+        var message = protocol.createMessage(command, args);
 
-        webSocket.send(cmdStr);
-        console.log("Command: " + cmdStr);
+        webSocket.send(message);
+        console.log("Message sent: " + message);
     };
 
     this.authenticate = function (token) {
@@ -100,8 +95,32 @@ RtStat.WebSocketClient = function (config) {
     this.isConnected = function () {
         return connected;
     };
+};
 
-    var parseArgs = function (argsStr) {
+RtStat.Protocol = function () {
+    this.parseMessage = function (message) {
+        var dataParts = message.split('::', 2);
+        var command = dataParts[0].toLowerCase();
+        var args = [];
+        if (dataParts.length > 1) {
+            args = parseArguments(dataParts[1]);
+        }
+
+        return {
+            command: command,
+            arguments: args
+        };
+    };
+
+    this.createMessage = function (command, args) {
+        var argsEscaped = args.map(function (value) {
+            return value.replace(/(::|\\)/g, '\\$1').replace(/\n/g, '\\n');
+        });
+
+        return command + '::' + argsEscaped.join('::');
+    };
+
+    var parseArguments = function (argsStr) {
         if (argsStr.length < 1) {
             return [];
         }
