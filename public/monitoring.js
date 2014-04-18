@@ -54,6 +54,9 @@ RtStat.Monitoring.Server = function (initialConfig) {
         var template = Handlebars.compile(source);
         return block = $(template({server: initialConfig}));
     })();
+    if (initialConfig.autoStart) {
+        block.find('.auto-start').prop('checked', true);
+    }
 
     this.getBlock = function () {
         return block;
@@ -255,6 +258,10 @@ RtStat.Monitoring.Server = function (initialConfig) {
                 t.text('Options');
             }
         });
+        $(srvPref$('name-btn')).on('click', function () {
+            var newName = prompt('Enter new server name', self.getName());
+            self.setName(newName);
+        });
 
         if (initialConfig.autoStart) {
             start();
@@ -265,11 +272,11 @@ RtStat.Monitoring.Server = function (initialConfig) {
         stop();
     };
 
-    this.getServerName = function () {
-        return $(srvPref$('name')).val();
+    this.getName = function () {
+        return $(srvPref$('name')).text();
     };
-    this.setServerName = function (value) {
-        $(srvPref$('name')).val(value);
+    this.setName = function (value) {
+        $(srvPref$('name')).text(value);
     };
 
     this.getHost = function () {

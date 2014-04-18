@@ -15,7 +15,7 @@
     <script id="server-template" type="text/x-handlebars">
         <div class="server" id="server-{{server.id}}">
             <div class="server-header">
-                <h1>{{server.name}} <span id="server-{{server.id}}-title"></span></h1>
+                <h1><span id="server-{{server.id}}-name">{{server.name}}</span> <span id="server-{{server.id}}-title"></span></h1>
                 <div class="server-status-bar">
                     [<span id="server-{{server.id}}-status">Disconnected</span>]
                     <button id="server-{{server.id}}-options-btn">Options</button>
@@ -30,6 +30,9 @@
                     <button id="server-{{server.id}}-interval-btn">Set interval</button><br />
                     <label for="server-{{server.id}}-token">Auth token</label>
                     <input id="server-{{server.id}}-token" class="server-token" type="text" value="{{server.token}}"/>
+                    <label for="server-{{server.id}}-auto-start">Auto start: </label>
+                    <input id="server-{{server.id}}-auto-start" type="checkbox" class="auto-start"/>
+                    <button id="server-{{server.id}}-name-btn">Change name</button>
                 </div>
             </div>
 
