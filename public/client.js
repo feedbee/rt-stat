@@ -114,7 +114,7 @@ RtStat.Protocol = function () {
 
     this.createMessage = function (command, args) {
         var argsEscaped = args.map(function (value) {
-            return value.replace(/(::|\\)/g, '\\$1').replace(/\n/g, '\\n');
+            return String(value).replace(/(::|\\)/g, '\\$1').replace(/\n/g, '\\n');
         });
 
         return command + '::' + argsEscaped.join('::');

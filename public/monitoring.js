@@ -2,22 +2,37 @@ if (typeof(RtStat) == "undefined") {
     RtStat = {};
 }
 RtStat.Monitoring = function (config) {
+    var columns = [];
+
     // constructor
-    var cols = [];
-    for (var i = 0; i < config.cols; i++) {
-        cols[i] = new RtStat.Monitoring.Column(i);
-        $('#wrapper').append(cols[i].getBlock());
+    for (var i = 0; i < config.columns.length; i++) {
+        columns[i] = new RtStat.Monitoring.Column(i);
+        $('#wrapper').append(columns[i].getBlock());
+
+        for (var j = 0; j < config.columns[i].servers.length; j++) {
+            var serverConfig = config.columns[i].servers[j];
+            var server = new RtStat.Monitoring.Server(serverConfig);
+            columns[i].addServer(server);
+        }
     }
 
-    for (i = 0; i < config.servers.length; i++) {
-        var serverConfig = config.servers[i];
-        var server = new RtStat.Monitoring.Server(serverConfig);
-        cols[serverConfig.col - 1].addServer(server);
-    }
+    this.getCurrentConfig = function () {
+        var currentConfig = {columns: []};
+        for (var i in columns) {
+            if (!columns.hasOwnProperty(i)) {
+                continue;
+            }
+            currentConfig.columns.push({
+                servers: columns[i].getServers()
+            });
+        }
+
+        return currentConfig;
+    };
 };
 
 RtStat.Monitoring.init = function (config) {
-    new RtStat.Monitoring(config);
+    var e = new RtStat.Monitoring(config);
 };
 
 RtStat.Monitoring.Column = function (index) {
@@ -26,6 +41,8 @@ RtStat.Monitoring.Column = function (index) {
         var template = Handlebars.compile(source);
         return $(template({colIndex: index}));
     })();
+
+    var servers = [];
 
     this.getBlock = function () {
         return block;
@@ -37,12 +54,18 @@ RtStat.Monitoring.Column = function (index) {
 
     this.addServer = function (server) {
         block.append(server.getBlock());
+        servers.push(server);
         server.init();
     };
 
     this.removeServer = function (server) {
         server.uninit();
         block.remove(server.getBlock());
+        servers.splice(servers.indexOf(server));
+    };
+
+    this.getServers = function () {
+        return servers.slice(0);
     };
 };
 
@@ -231,6 +254,10 @@ RtStat.Monitoring.Server = function (initialConfig) {
     };
 
     var start = function () {
+        if (client.isConnected()) {
+            client.stop();
+        }
+
         wantToBeConnected = true;
         connect();
     };
@@ -287,7 +314,7 @@ RtStat.Monitoring.Server = function (initialConfig) {
     };
 
     this.getInterval = function () {
-        return $(srvPref$('interval')).val();
+        return parseFloat($(srvPref$('interval')).val());
     };
     this.setInterval = function (value) {
         $(srvPref$('interval')).val(value);
@@ -301,9 +328,19 @@ RtStat.Monitoring.Server = function (initialConfig) {
     };
 
     this.getAutoStart = function () {
-        return $(srvPref$('auto-start')).val();
+        return $(srvPref$('auto-start')).is(':checked');
     };
     this.setAutoStart = function (value) {
-        $(srvPref$('auto-start')).val(value);
+        $(srvPref$('auto-start')).attr('checked', 'checked');
+    };
+
+    this.getCurrentConfig = function () {
+        return {
+            id: initialConfig.id,
+            name: this.getName(),
+            host: this.getHost(),
+            interval: this.getInterval(),
+            autoStart: this.getAutoStart()
+        };
     };
 };
