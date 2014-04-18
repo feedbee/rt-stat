@@ -2,36 +2,75 @@ if (typeof(RtStat) == "undefined") {
     RtStat = {};
 }
 RtStat.Monitoring = function (config) {
-    //private methods
-    var createCol = function (index) {
+    // constructor
+    var cols = [];
+    for (var i = 0; i < config.cols; i++) {
+        cols[i] = new RtStat.Monitoring.Column(i);
+        $('#wrapper').append(cols[i].getBlock());
+    }
+
+    for (i = 0; i < config.servers.length; i++) {
+        var serverConfig = config.servers[i];
+        var server = new RtStat.Monitoring.Server(
+            serverConfig.id,
+            serverConfig.name,
+            serverConfig.host,
+            serverConfig.interval,
+            serverConfig.token ? serverConfig.token : '',
+            serverConfig.autoStart
+        );
+        cols[serverConfig.col - 1].addServer(server);
+    }
+};
+
+RtStat.Monitoring.init = function (config) {
+    new RtStat.Monitoring(config);
+};
+
+RtStat.Monitoring.Column = function (index) {
+    var block = (function () {
         var source   = $("#col-template").html();
         var template = Handlebars.compile(source);
-        var block = $(template({colIndex: index}));
+        return $(template({colIndex: index}));
+    })();
 
-        var wrapper = $('#wrapper');
-        wrapper.append(block);
-
+    this.getBlock = function () {
         return block;
     };
 
-    var createServer = function (id, name, host, interval, token, container) {
+    this.remove = function () {
+        block.remove();
+    };
+
+    this.addServer = function (server) {
+        block.append(server.getBlock());
+        server.init();
+    };
+
+    this.removeServer = function (server) {
+        server.uninit();
+        block.remove(server.getBlock());
+    };
+};
+
+RtStat.Monitoring.Server = function (serverId, serverName, serverHost, serverInterval, serverToken, serverAutoStart) {
+    var block = (function () {
         var source   = $("#server-template").html();
         var template = Handlebars.compile(source);
-        var block = $(template({
-            serverId: id,
-            serverName: name,
-            host: host,
-            interval: interval,
-            token: token
+        return block = $(template({
+            serverId: serverId,
+            serverName: serverName,
+            host: serverHost,
+            interval: serverInterval,
+            token: serverToken
         }));
+    })();
 
-        var wrapper = $(container);
-        wrapper.append(block);
-
+    this.getBlock = function () {
         return block;
     };
 
-    var init = function (serverId, autoStart) {
+    this.init = function () {
         var srvPref = function (id) {
             return "server-" + serverId + "-" + id;
         };
@@ -252,31 +291,8 @@ RtStat.Monitoring = function (config) {
             }
         });
 
-        if (autoStart) {
+        if (serverAutoStart) {
             start();
         }
     };
-
-    // constructor
-    var cols = [];
-    for (var i = 0; i < config.cols; i++) {
-        cols[i] = createCol(i);
-    }
-
-    for (i = 0; i < config.servers.length; i++) {
-        var serverConfig = config.servers[i];
-        createServer(
-            serverConfig.id,
-            serverConfig.name,
-            serverConfig.host,
-            serverConfig.interval,
-            serverConfig.token ? serverConfig.token : '',
-            cols[serverConfig.col - 1]
-        );
-        init(serverConfig.id, serverConfig.autoStart);
-    }
-};
-
-RtStat.Monitoring.init = function (config) {
-    new RtStat.Monitoring(config);
 };
