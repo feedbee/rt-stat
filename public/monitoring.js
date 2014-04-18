@@ -11,14 +11,7 @@ RtStat.Monitoring = function (config) {
 
     for (i = 0; i < config.servers.length; i++) {
         var serverConfig = config.servers[i];
-        var server = new RtStat.Monitoring.Server(
-            serverConfig.id,
-            serverConfig.name,
-            serverConfig.host,
-            serverConfig.interval,
-            serverConfig.token ? serverConfig.token : '',
-            serverConfig.autoStart
-        );
+        var server = new RtStat.Monitoring.Server(serverConfig);
         cols[serverConfig.col - 1].addServer(server);
     }
 };
@@ -53,17 +46,13 @@ RtStat.Monitoring.Column = function (index) {
     };
 };
 
-RtStat.Monitoring.Server = function (serverId, serverName, serverHost, serverInterval, serverToken, serverAutoStart) {
+RtStat.Monitoring.Server = function (initialConfig) {
+    var self = this;
+
     var block = (function () {
         var source   = $("#server-template").html();
         var template = Handlebars.compile(source);
-        return block = $(template({
-            serverId: serverId,
-            serverName: serverName,
-            host: serverHost,
-            interval: serverInterval,
-            token: serverToken
-        }));
+        return block = $(template({server: initialConfig}));
     })();
 
     this.getBlock = function () {
@@ -71,7 +60,7 @@ RtStat.Monitoring.Server = function (serverId, serverName, serverHost, serverInt
     };
 
     var srvPref = function (id) {
-        return "server-" + serverId + "-" + id;
+        return "server-" + initialConfig.id + "-" + id;
     };
     var srvPref$ = function (id) {
         return "#" + srvPref(id);
@@ -187,7 +176,7 @@ RtStat.Monitoring.Server = function (serverId, serverName, serverHost, serverInt
         },
         onOpenCallback: function () {
             $(srvPref$('status')).text('Connected');
-            var token = $(srvPref$('token')).val();
+            var token = self.getToken();
             if (token) {
                 client.authenticate(token);
             }
@@ -212,9 +201,8 @@ RtStat.Monitoring.Server = function (serverId, serverName, serverHost, serverInt
     var connect = function () {
         statusBlock.text('Connecting...');
 
-        var wsUri = $(srvPref$('host')).val();
-        var hostMatch = $(srvPref$('host')).val()
-            .match(/^((ws|wss):\/\/)?([a-zA-Z0-9\-\.]{1,63})(:(\d{1,5}))?(\/.*)?$/i);
+        var wsUri = self.getHost();
+        var hostMatch = wsUri.match(/^((ws|wss):\/\/)?([a-zA-Z0-9\-\.]{1,63})(:(\d{1,5}))?(\/.*)?$/i);
         if (hostMatch) {
             wsUri = hostMatch[3]; // host
             if (hostMatch[2]) { // protocol
@@ -251,7 +239,7 @@ RtStat.Monitoring.Server = function (serverId, serverName, serverHost, serverInt
         client.disconnect();
     };
     var setInterval = function () {
-        client.setInterval($(srvPref$('interval')).val());
+        client.setInterval(self.getInterval());
     };
 
     this.init = function () {
@@ -268,8 +256,47 @@ RtStat.Monitoring.Server = function (serverId, serverName, serverHost, serverInt
             }
         });
 
-        if (serverAutoStart) {
+        if (initialConfig.autoStart) {
             start();
         }
+    };
+
+    this.uninit = function () {
+        stop();
+    };
+
+    this.getServerName = function () {
+        return $(srvPref$('name')).val();
+    };
+    this.setServerName = function (value) {
+        $(srvPref$('name')).val(value);
+    };
+
+    this.getHost = function () {
+        return $(srvPref$('host')).val();
+    };
+    this.setHost = function (value) {
+        $(srvPref$('host')).val(value);
+    };
+
+    this.getInterval = function () {
+        return $(srvPref$('interval')).val();
+    };
+    this.setInterval = function (value) {
+        $(srvPref$('interval')).val(value);
+    };
+
+    this.getToken = function () {
+        return $(srvPref$('token')).val();
+    };
+    this.setToken = function (value) {
+        $(srvPref$('token')).val(value);
+    };
+
+    this.getAutoStart = function () {
+        return $(srvPref$('auto-start')).val();
+    };
+    this.setAutoStart = function (value) {
+        $(srvPref$('auto-start')).val(value);
     };
 };

@@ -13,69 +13,69 @@
         <div class="col" id="col-{{colIndex}}"></div>
     </script>
     <script id="server-template" type="text/x-handlebars">
-        <div class="server" id="server-{{serverId}}">
+        <div class="server" id="server-{{server.id}}">
             <div class="server-header">
-                <h1>{{serverName}} <span id="server-{{serverId}}-title"></span></h1>
+                <h1>{{server.name}} <span id="server-{{server.id}}-title"></span></h1>
                 <div class="server-status-bar">
-                    [<span id="server-{{serverId}}-status">Disconnected</span>]
-                    <button id="server-{{serverId}}-options-btn">Options</button>
+                    [<span id="server-{{server.id}}-status">Disconnected</span>]
+                    <button id="server-{{server.id}}-options-btn">Options</button>
                 </div>
-                <div id="server-{{serverId}}-options" class="server-options">
-                    <label for="server-{{serverId}}-host">Server</label>
-                    <input id="server-{{serverId}}-host" class="server-host" type="text" value="{{host}}"/>
-                    <button id="server-{{serverId}}-start-btn">Start</button>
-                    <button id="server-{{serverId}}-stop-btn">Stop</button>
-                    <label for="server-{{serverId}}-interval">Interval</label>
-                    <input id="server-{{serverId}}-interval" class="server-interval" type="text" value="{{interval}}"/>
-                    <button id="server-{{serverId}}-interval-btn">Set interval</button><br />
-                    <label for="server-{{serverId}}-token">Auth token</label>
-                    <input id="server-{{serverId}}-token" class="server-token" type="text" value="{{token}}"/>
+                <div id="server-{{server.id}}-options" class="server-options">
+                    <label for="server-{{server.id}}-host">Server</label>
+                    <input id="server-{{server.id}}-host" class="server-host" type="text" value="{{server.host}}"/>
+                    <button id="server-{{server.id}}-start-btn">Start</button>
+                    <button id="server-{{server.id}}-stop-btn">Stop</button>
+                    <label for="server-{{server.id}}-interval">Interval</label>
+                    <input id="server-{{server.id}}-interval" class="server-interval" type="text" value="{{server.interval}}"/>
+                    <button id="server-{{server.id}}-interval-btn">Set interval</button><br />
+                    <label for="server-{{server.id}}-token">Auth token</label>
+                    <input id="server-{{server.id}}-token" class="server-token" type="text" value="{{server.token}}"/>
                 </div>
             </div>
 
-            <div id="server-{{serverId}}-uptime" class="indicator-block">
+            <div id="server-{{server.id}}-uptime" class="indicator-block">
                 <h2>Summary</h2>
 
                 <div>
-                    Server time is <span id="server-{{serverId}}-uptime-time">—</span>,
-                    uptime: <span id="server-{{serverId}}-uptime-uptime">—</span>.<br />
-                    <span id="server-{{serverId}}-uptime-users">—</span> users online.
-                    LA <span id="server-{{serverId}}-uptime-la1">—</span>; <span id="server-{{serverId}}-uptime-la5">—</span>;
-                    <span id="server-{{serverId}}-uptime-la15">—</span>
+                    Server time is <span id="server-{{server.id}}-uptime-time">—</span>,
+                    uptime: <span id="server-{{server.id}}-uptime-uptime">—</span>.<br />
+                    <span id="server-{{server.id}}-uptime-users">—</span> users online.
+                    LA <span id="server-{{server.id}}-uptime-la1">—</span>; <span id="server-{{server.id}}-uptime-la5">—</span>;
+                    <span id="server-{{server.id}}-uptime-la15">—</span>
                 </div>
                 <div>
-                    Processes: A:<span id="server-{{serverId}}-processes-all">—</span>, R:<span id="server-{{serverId}}-processes-running">—</span>,
-                    S:<span id="server-{{serverId}}-processes-sleep">—</span>, Z:<span id="server-{{serverId}}-processes-zombie">—</span>
+                    Processes: A:<span id="server-{{server.id}}-processes-all">—</span>, R:<span id="server-{{server.id}}-processes-running">—</span>,
+                    S:<span id="server-{{server.id}}-processes-sleep">—</span>, Z:<span id="server-{{server.id}}-processes-zombie">—</span>
                 </div>
             </div>
 
-            <div id="server-{{serverId}}-processors" class="indicator-block server-processors">
+            <div id="server-{{server.id}}-processors" class="indicator-block server-processors">
                 <h2>Processors</h2>
 
-                <div id="server-{{serverId}}-processors-cpuX-template" class="template">
+                <div id="server-{{server.id}}-processors-cpuX-template" class="template">
                     <div class="flex">
-                        <span id="server-{{serverId}}-processors-\{{cpuId}}-label" class="label">\{{cpuId}}</span>
-                        <canvas id="server-{{serverId}}-processors-\{{cpuId}}-canvas" width="300" height="20"></canvas>
-                        <span id="server-{{serverId}}-processors-\{{cpuId}}-value" class="value"></span>
+                        <span id="server-{{server.id}}-processors-\{{cpuId}}-label" class="label">\{{cpuId}}</span>
+                        <canvas id="server-{{server.id}}-processors-\{{cpuId}}-canvas" width="300" height="20"></canvas>
+                        <span id="server-{{server.id}}-processors-\{{cpuId}}-value" class="value"></span>
                     </div>
                 </div>
             </div>
 
-            <div id="server-{{serverId}}-memory" class="indicator-block">
+            <div id="server-{{server.id}}-memory" class="indicator-block">
                 <h2>Memory</h2>
 
                 <div class="flex">
-                    <canvas id="server-{{serverId}}-memory-canvas" width="300" height="20"></canvas>
-                    <span id="server-{{serverId}}-memory-value" class="value"></span>
+                    <canvas id="server-{{server.id}}-memory-canvas" width="300" height="20"></canvas>
+                    <span id="server-{{server.id}}-memory-value" class="value"></span>
                 </div>
             </div>
 
-            <div id="server-{{serverId}}-swap" class="indicator-block">
+            <div id="server-{{server.id}}-swap" class="indicator-block">
                 <h2>Swap</h2>
 
                 <div class="flex">
-                    <canvas id="server-{{serverId}}-swap-canvas" width="300" height="20"></canvas>
-                    <span id="server-{{serverId}}-swap-value" class="value"></span>
+                    <canvas id="server-{{server.id}}-swap-canvas" width="300" height="20"></canvas>
+                    <span id="server-{{server.id}}-swap-value" class="value"></span>
                 </div>
             </div>
         </div>
