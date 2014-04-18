@@ -77,101 +77,78 @@ RtStat.Monitoring.Server = function (serverId, serverName, serverHost, serverInt
         return "#" + srvPref(id);
     };
 
-    var typesCpu = [
-        {key: 'user', color: "rgb(60,163,23)"},
-        {key: 'system', color: "rgb(247,187,22)"},
-        {key: 'iowait', color: "rgb(232,23,23)"}
-    ];
     var cpuStat = function (allCpus) {
-        for (var key in allCpus) {
-            if (!allCpus.hasOwnProperty(key)) {
+        var typesCpu = [
+            {key: 'user', color: "rgb(60,163,23)"},
+            {key: 'system', color: "rgb(247,187,22)"},
+            {key: 'iowait', color: "rgb(232,23,23)"}
+        ];
+        graphInfo(allCpus, typesCpu, 'processors', 'processors-cpuX-template', 'processors', 0.90, function (data) { return data.usage;},
+            function (data, element) { return data[element.key];});
+    };
+
+    var memInfo = function (meminfo) {
+        var typesMemory = [
+            {key: 'apps', color: "rgb(33,145,29)"},
+            {key: 'buffers', color: "rgb(160,20,0)"},
+            {key: 'cached', color: "rgb(242,143,12)"},
+            {key: 'swapCached', color: "rgb(232,23,23)"}
+        ];
+        graphInfo({memory: meminfo.memory}, typesMemory, '', '', '', 0.85, function (data) {return (data.apps + data.buffers) / data.total;},
+            function (data, element) {return data[element.key] / data.total;});
+
+        var typesSwap = [
+            {key: 'used', color: "rgb(232,23,23)"}
+        ];
+        graphInfo({swap: meminfo.swap}, typesSwap, '', '', '', 0.10, function (data) {return data.used / data.total;},
+            function (data, element) {return data[element.key] / data.total;});
+    };
+
+    var graphInfo = function (dataset, types, blockSelector, blockTemplateSelector, appendToSelector, warnLimit,
+                        dataGetOverallUsageValueClb, dataGetElementUsageValueClb) {
+        for (var key in dataset) {
+            if (!dataset.hasOwnProperty(key)) {
                 continue;
             }
 
-            var data = allCpus[key];
+            var data = dataset[key];
 
-            var processorBlock = $(srvPref$('processors-' + key));
-            if (processorBlock.length < 1) {
-                var template = Handlebars.compile($(srvPref$('processors-cpuX-template')).html());
+            var compiledBlockSelector = (blockSelector ? blockSelector + '-' : '') + key + '-canvas';
+            var block = $(srvPref$(compiledBlockSelector));
+            if (block.length < 1) {
+                var template = Handlebars.compile($(srvPref$(blockTemplateSelector)).html());
                 var newEl =  $(template({cpuId: key}));
-                $(srvPref$('processors')).append(newEl);
-                processorBlock = newEl.find(srvPref$('processors-' + key));
+                $(srvPref$(appendToSelector)).append(newEl);
+                block = newEl.find(srvPref$(compiledBlockSelector));
             }
 
-            var canvas = processorBlock.get(0);
-            var labelField = $(srvPref$('processors-' + key + '-label'));
-            var valueField = $(srvPref$('processors-' + key + '-value'));
-            labelField.text(key);
-            var ctx = canvas.getContext("2d");
+            var valueField = block.parent().find('span.value');
+            if (valueField) {
+                var value = dataGetOverallUsageValueClb(data);
+                valueField.text(Math.round(value * 1000) / 10 + '%');
+                if (value >= warnLimit) {
+                    valueField.addClass('warning');
+                }
+                else {
+                    valueField.removeClass('warning');
+                }
+            }
 
+            var canvas = block.get(0);
+            var ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             var lastX = 0;
             var width = canvas.width;
-            typesCpu.forEach(function (element) {
-                var value = data[element.key];
+            types.forEach(function (element) {
+                var value = dataGetElementUsageValueClb(data, element);
                 ctx.fillStyle = element.color;
                 var segmentWidth = Math.round(value * width);
                 if (segmentWidth > 1) {
                     ctx.fillRect(lastX + 1, 1, segmentWidth - 1, canvas.height - 2);
                     lastX += segmentWidth;
                 }
-
             });
-
-            valueField.text(Math.round(data.usage * 1000) / 10 + '%');
-            if (data.usage >= 0.90) {
-                valueField.addClass('warning');
-            }
-            else {
-                valueField.removeClass('warning');
-            }
-        }
-    };
-
-    var typesMemory = [
-        {key: 'apps', color: "rgb(33,145,29)"},
-        {key: 'buffers', color: "rgb(160,20,0)"},
-        {key: 'cached', color: "rgb(242,143,12)"},
-        {key: 'swapCached', color: "rgb(232,23,23)"}
-    ];
-    var typesSwap = [
-        {key: 'used', color: "rgb(232,23,23)"}
-    ];
-    var memInfo = function (meminfo) {
-        for (var key in meminfo) {
-            if (!meminfo.hasOwnProperty(key)) {
-                continue;
-            }
-
-            var data = meminfo[key];
-
-            var canvas = $(srvPref$(key + '-canvas')).get(0);
-            var valueField = $(srvPref$(key + '-value'));
-            var ctx = canvas.getContext("2d");
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            var lastX = 0;
-            var width = canvas.width;
-            var types = (key == 'memory' ? typesMemory : typesSwap);
-            types.forEach(function (element) {
-                var value = data[element.key];
-                ctx.fillStyle = element.color;
-                var segmentWidth = Math.round(value / data.total * width);
-                if (segmentWidth > 1) {
-                    ctx.fillRect(lastX + 1, 1, segmentWidth - 1, canvas.height - 2);
-                    lastX += segmentWidth;
-                }
-            });
-
-            valueField.text(Math.round(data.used / data.total * 1000) / 10 + '%');
-            if (data.usage > 0.85) {
-                valueField.addClass('warning');
-            }
-            else {
-                valueField.removeClass('warning');
-            }
         }
     };
 
