@@ -63,7 +63,7 @@ class Worker
 	public function open()
 	{
 		$this->logger->debug('Worker::opened');
-		$this->send("Welcome::" . Application::NAME . " v." . Application::VERSION);
+		$this->sendCommand("Welcome", [Application::NAME . " v." . Application::VERSION]);
 	}
 
 	public function push()
@@ -76,7 +76,7 @@ class Worker
 			$data[$plugin->getName()] = $plugin->getData();
 		}
 
-		$this->send('Push::' . json_encode($data, JSON_UNESCAPED_UNICODE));
+		$this->sendCommand('Push', [json_encode($data, JSON_UNESCAPED_UNICODE)]);
 	}
 
 	/**
@@ -91,9 +91,13 @@ class Worker
 			return;
 		}
 
-		$parts = explode('::', trim($message), 2);
-		$command = strtolower($parts[0]);
+		$messageParsed = Protocol::parseMessage($message);
 
+		$this->executeCommand($messageParsed['command'], $messageParsed['arguments']);
+	}
+
+	private function executeCommand($command, $arguments)
+	{
 		if (!is_null($this->authToken) && !$this->authorized
 			&& in_array($command, array('start', 'stop', 'interval')))
 		{
@@ -101,23 +105,19 @@ class Worker
 			return;
 		}
 
-		$args = [];
-		if (count($parts) > 1) {
-			$args = static::parseArgs($parts[1]);
-		}
-
 		switch ($command) {
 			case 'auth':
-				if (count($args) < 1) {
-					$this->sendError("Auth message has 1 required parameter: string token (not set)");
+				if (count($arguments) < 1) {
+					$this->sendError("Auth command has 1 required parameter: string token (not set)");
 					return;
 				}
-				$this->authorized = (!is_null($this->authToken) && $this->authToken == $args[0]);
+				$this->authorized = (!is_null($this->authToken) && $this->authToken == $arguments[0]);
 				if (!$this->authorized) {
 					$this->sendError("Auth failed");
 					return;
 				}
 				break;
+
 			case 'start':
 				if ($this->pushTimer) {
 					$this->sendError("Already started");
@@ -129,6 +129,7 @@ class Worker
 				}
 				$this->start();
 				break;
+
 			case 'stop':
 				if (!$this->pushTimer) {
 					$this->sendError("Not started");
@@ -136,67 +137,36 @@ class Worker
 				}
 				$this->stop();
 				break;
+
 			case 'interval':
-				if (count($args) < 1) {
-					$this->sendError("Interval message has 1 required parameter: int interval (not set)");
+				if (count($arguments) < 1) {
+					$this->sendError("Interval command has 1 required parameter: int interval (not set)");
 					return;
 				}
-				$arg = (float)$args[0];
-				if ($args[0] != $arg || $arg == 0) {
-					$this->sendError("Interval message has 1 required parameter: int interval (not positive float)");
+				$arg = (float)$arguments[0];
+				if ($arguments[0] != $arg || $arg == 0) {
+					$this->sendError("Interval command has 1 required parameter: int interval (not positive float)");
 					return;
 				}
 				if ($arg < 0.5) {
-					$this->sendError("Interval message has must be equal or greater than 0.5");
+					$this->sendError("Interval command has must be equal or greater than 0.5");
 					return;
 				}
 				$this->setInterval($arg);
 				break;
+
 			case 'version':
 				$this->send("Version::" . Application::VERSION);
 				break;
+
 			case 'quit':
 			case 'exit':
 				$this->quit();
 				break;
+
 			default:
-				$this->sendError("Unknown message");
+				$this->sendError("Unknown command");
 		}
-	}
-
-	static private function parseArgs($argsStr) {
-		$length = strlen($argsStr);
-		if ($length < 1) {
-			return [];
-		}
-
-		$escapeMode = false;
-		$argsStack = [''];
-		$lastArg =& $argsStack[0];
-		for ($i = 0; $i < $length; $i++) {
-			$char = substr($argsStr, $i, 1);
-
-			if ($escapeMode) {
-				$escapeMode = false;
-				if ($char == 'n') {
-					$lastArg .= "\n";
-				} else {
-					$lastArg .= $char;
-				}
-			} else {
-				if ($char == '\\') {
-					$escapeMode = true;
-				} else if ($char == ':' && $i < $length - 1 && substr($argsStr, $i + 1, 1) == ':') {
-					$argsStack[] = '';
-					$lastArg =& $argsStack[count($argsStack) - 1];
-					$i++;
-				} else {
-					$lastArg .= $char;
-				}
-			}
-		}
-
-		return $argsStack;
 	}
 
 	public function setInterval($interval)
@@ -239,16 +209,13 @@ class Worker
 		$this->connection->send($text . "\n");
 	}
 
-	private function sendCommand($command, array $args)
+	private function sendCommand($command, array $arguments)
 	{
-		$argsEscaped = array_map(function ($value) {
-			return str_replace(["\n", '::'], ['\\n', '\::'], str_replace('\\\\', '\\', $value));
-		}, $args);
-		$text = implode('::', $argsEscaped);
+		$message = Protocol::createMessage($command, $arguments);
 
-		$this->logger->debug("Worker::sendCommand {$command}::{$text}");
+		$this->logger->debug("Worker::sendCommand {$message}");
 
-		$this->send("{$command}::{$text}");
+		$this->send($message);
 	}
 
 	private function sendError($text)
