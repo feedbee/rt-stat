@@ -2,20 +2,8 @@ if (typeof(RtStat) == "undefined") {
     RtStat = {};
 }
 RtStat.Monitoring = function (config) {
+    var self = this;
     var columns = [];
-
-    // constructor
-    for (var i = 0; i < config.columns.length; i++) {
-        columns[i] = new RtStat.Monitoring.Column(i);
-        $('#wrapper').append(columns[i].getBlock());
-        columns[i].init();
-
-        for (var j = 0; j < config.columns[i].servers.length; j++) {
-            var serverConfig = config.columns[i].servers[j];
-            var server = new RtStat.Monitoring.Server(serverConfig);
-            columns[i].addServer(server);
-        }
-    }
 
     $('#edit-mode-btn').on('click', function () {
        $('body').toggleClass('edit-mode-off').toggleClass('edit-mode-on');
@@ -26,6 +14,69 @@ RtStat.Monitoring = function (config) {
         $('#wrapper').append(newCol.getBlock());
         newCol.init();
     });
+    $('#get-config-btn').click(function () {
+        var txId = 'tx-' + RtStat.Monitoring.generateRandomString();
+
+        var source = $("#config-dialog-template").html();
+        var template = Handlebars.compile(source);
+        $.modal($(template({
+            title: 'Current config',
+            textareaId: txId,
+            needButton: false
+        })));
+
+        $('#' + txId).val(JSON.stringify(self.getCurrentConfig(), undefined, 2));
+    });
+    $('#setup-btn').click(function () {
+        var txId = 'tx-' + RtStat.Monitoring.generateRandomString();
+        var btnId = 'btn-' + RtStat.Monitoring.generateRandomString();
+
+        var source = $("#config-dialog-template").html();
+        var template = Handlebars.compile(source);
+        var m = $.modal($(template({
+            title: 'Setup from config',
+            textareaId: txId,
+            buttonId: btnId,
+            needButton: true
+        })));
+
+        $('#' + btnId).click(function () {
+            try {
+                var newConfig = JSON.parse($('#' + txId).val());
+            } catch (e) {
+                console.error("JSON parsing error:", e);
+                alert('JSON can not be parsed (perhaps it\'s not valid). Check developer console for details.');
+                return;
+            }
+            self.setup(newConfig);
+            m.close();
+        });
+    });
+
+    var removeAllColumns = function () {
+        for (var i in columns) {
+            if (!columns.hasOwnProperty(i)) {
+                continue;
+            }
+            columns[i].remove();
+        }
+    };
+
+    this.setup = function (config) {
+        removeAllColumns();
+
+        for (var i = 0; i < config.columns.length; i++) {
+            columns[i] = new RtStat.Monitoring.Column(i);
+            $('#wrapper').append(columns[i].getBlock());
+            columns[i].init();
+
+            for (var j = 0; j < config.columns[i].servers.length; j++) {
+                var serverConfig = config.columns[i].servers[j];
+                var server = new RtStat.Monitoring.Server(serverConfig);
+                columns[i].addServer(server);
+            }
+        }
+    };
 
     this.getCurrentConfig = function () {
         var currentConfig = {columns: []};
@@ -33,13 +84,25 @@ RtStat.Monitoring = function (config) {
             if (!columns.hasOwnProperty(i)) {
                 continue;
             }
-            currentConfig.columns.push({
-                servers: columns[i].getServers()
-            });
+            var colConfig = {
+                servers: []
+            };
+
+            var servers = columns[i].getServers();
+            for (var s in servers) {
+                if (!servers.hasOwnProperty(s)) {
+                    continue;
+                }
+                colConfig.servers.push(servers[s].getCurrentConfig());
+            }
+
+            currentConfig.columns.push(colConfig);
         }
 
         return currentConfig;
     };
+
+    this.setup(config);
 };
 
 RtStat.Monitoring.generateRandomString = function () {
@@ -53,7 +116,7 @@ RtStat.Monitoring.init = function (config) {
 RtStat.Monitoring.Column = function (index) {
     var self = this;
     var block = (function () {
-        var source   = $("#col-template").html();
+        var source = $("#col-template").html();
         var template = Handlebars.compile(source);
         return $(template({colIndex: index}));
     })();
@@ -111,7 +174,7 @@ RtStat.Monitoring.Server = function (initialConfig) {
     var self = this;
 
     var block = (function () {
-        var source   = $("#server-template").html();
+        var source = $("#server-template").html();
         var template = Handlebars.compile(source);
         return block = $(template({server: initialConfig}));
     })();
