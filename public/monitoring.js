@@ -456,12 +456,19 @@ RtStat.Monitoring.Server = function (initialConfig) {
     };
 
     this.getCurrentConfig = function () {
-        return {
+        var currentConfig = {
             id: initialConfig.id,
             name: this.getName(),
             host: this.getHost(),
             interval: this.getInterval(),
             autoStart: this.getAutoStart()
         };
+
+        var token = this.getToken();
+        if (token) {
+            currentConfig.token = token;
+        }
+
+        return currentConfig;
     };
 };
