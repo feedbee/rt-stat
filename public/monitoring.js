@@ -8,6 +8,7 @@ RtStat.Monitoring = function (config) {
     for (var i = 0; i < config.columns.length; i++) {
         columns[i] = new RtStat.Monitoring.Column(i);
         $('#wrapper').append(columns[i].getBlock());
+        columns[i].init();
 
         for (var j = 0; j < config.columns[i].servers.length; j++) {
             var serverConfig = config.columns[i].servers[j];
@@ -15,6 +16,16 @@ RtStat.Monitoring = function (config) {
             columns[i].addServer(server);
         }
     }
+
+    $('#edit-mode-btn').on('click', function () {
+       $('body').toggleClass('edit-mode-off').toggleClass('edit-mode-on');
+    });
+    $('#add-col-btn').on('click', function () {
+        var newCol = new RtStat.Monitoring.Column(columns.length);
+        columns.push(newCol);
+        $('#wrapper').append(newCol.getBlock());
+        newCol.init();
+    });
 
     this.getCurrentConfig = function () {
         var currentConfig = {columns: []};
@@ -31,11 +42,16 @@ RtStat.Monitoring = function (config) {
     };
 };
 
+RtStat.Monitoring.generateRandomString = function () {
+    return Math.floor((Math.random()) * Math.pow(10, 50)).toString(36);
+};
+
 RtStat.Monitoring.init = function (config) {
     var e = new RtStat.Monitoring(config);
 };
 
 RtStat.Monitoring.Column = function (index) {
+    var self = this;
     var block = (function () {
         var source   = $("#col-template").html();
         var template = Handlebars.compile(source);
@@ -49,18 +65,40 @@ RtStat.Monitoring.Column = function (index) {
     };
 
     this.remove = function () {
+        for (var i = 0; i < servers.length; i++) {
+            this.removeServer(servers[i]);
+        }
         block.remove();
     };
 
+    this.init = function () {
+        $('#col-' + index + '-remove-btn').click(function () {
+            self.remove();
+        });
+        $('#col-' + index + '-add-server-btn').click(function () {
+            self.addServer(new RtStat.Monitoring.Server({
+                id: RtStat.Monitoring.generateRandomString(),
+                name: 'New Server',
+                host: 'localhost',
+                interval: 1.5,
+                autoStart: false
+            }));
+        });
+    };
+
     this.addServer = function (server) {
-        block.append(server.getBlock());
+        block.find('.servers').append(server.getBlock());
         servers.push(server);
         server.init();
+
+        block.find('.server-remove-btn').click(function () {
+            self.removeServer(server);
+        });
     };
 
     this.removeServer = function (server) {
         server.uninit();
-        block.remove(server.getBlock());
+        server.getBlock().remove();
         servers.splice(servers.indexOf(server));
     };
 
@@ -219,7 +257,14 @@ RtStat.Monitoring.Server = function (initialConfig) {
         onCloseCallback: function () {
             if (wantToBeConnected) {
                 statusBlock.text('Disconnected. Trying to connect...');
-                setTimeout(connect, 1000);
+                setTimeout(function() {
+                    if (wantToBeConnected) {
+                        connect();
+                    } else {
+                        statusBlock.text('Disconnected');
+                        connecting = false;
+                    }
+                }, self.getInterval() * 1000);
             } else {
                 statusBlock.text('Disconnected');
                 connecting = false;
@@ -274,7 +319,10 @@ RtStat.Monitoring.Server = function (initialConfig) {
         if (client.isConnected()) {
             client.stop();
         }
-        client.disconnect();
+        if (client.isConnected() || connecting) {
+            client.disconnect();
+        }
+        statusBlock.text('Disconnected');
     };
     var setInterval = function () {
         client.setInterval(self.getInterval());

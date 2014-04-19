@@ -7,10 +7,20 @@
     <title>Servers Monitoring</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="edit-mode-off">
+<div id="toolbar">
+    <button id="edit-mode-btn">Layout edit mode</button>
+    <button id="add-col-btn" class="edit-mode">Add column</button>
+</div>
 <div id="wrapper">
     <script id="col-template" type="text/x-handlebars">
-        <div class="col" id="col-{{colIndex}}"></div>
+        <div class="col" id="col-{{colIndex}}">
+            <div class="servers"></div>
+            <div class="edit-mode col-controls">
+                <button id="col-{{colIndex}}-add-server-btn">Add server</button>
+                <button id="col-{{colIndex}}-remove-btn">Remove column</button>
+            </div>
+        </div>
     </script>
     <script id="server-template" type="text/x-handlebars">
         <div class="server" id="server-{{server.id}}">
@@ -19,6 +29,7 @@
                 <div class="server-status-bar">
                     [<span id="server-{{server.id}}-status">Disconnected</span>]
                     <button id="server-{{server.id}}-options-btn">Options</button>
+                    <button id="server-{{server.id}}-remove-btn" class="server-remove-btn edit-mode">Remove server</button>
                 </div>
                 <div id="server-{{server.id}}-options" class="server-options">
                     <label for="server-{{server.id}}-host">Server</label>
