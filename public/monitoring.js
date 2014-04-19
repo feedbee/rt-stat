@@ -186,6 +186,9 @@ RtStat.Monitoring.Server = function (initialConfig) {
         }
     };
 
+    var statusBlock; // will be assigned later in init()
+    var wantToBeConnected = false;
+    var connecting = false;
     var client = new RtStat.WebSocketClient({
         onCmdCallback: function (cmd, args) {
             if (cmd == 'push') {
@@ -201,7 +204,8 @@ RtStat.Monitoring.Server = function (initialConfig) {
             }
         },
         onOpenCallback: function () {
-            $(srvPref$('status')).text('Connected');
+            connecting = false;
+            statusBlock.text('Connected');
             var token = self.getToken();
             if (token) {
                 client.authenticate(token);
@@ -210,7 +214,7 @@ RtStat.Monitoring.Server = function (initialConfig) {
             client.start();
         },
         onErrorCallback: function (data) {
-//                alert('WebSockets error: ' + data);
+            statusBlock.text('Error. Disconnecting...');
         },
         onCloseCallback: function () {
             if (wantToBeConnected) {
@@ -218,12 +222,12 @@ RtStat.Monitoring.Server = function (initialConfig) {
                 setTimeout(connect, 1000);
             } else {
                 statusBlock.text('Disconnected');
+                connecting = false;
             }
         }
     });
 
-    var statusBlock = $(srvPref$('status'));
-    var wantToBeConnected = false;
+
     var connect = function () {
         statusBlock.text('Connecting...');
 
@@ -254,11 +258,15 @@ RtStat.Monitoring.Server = function (initialConfig) {
     };
 
     var start = function () {
+        if (connecting) {
+            return;
+        }
         if (client.isConnected()) {
             client.stop();
         }
 
         wantToBeConnected = true;
+        connecting = true;
         connect();
     };
     var stop = function () {
@@ -289,6 +297,8 @@ RtStat.Monitoring.Server = function (initialConfig) {
             var newName = prompt('Enter new server name', self.getName());
             self.setName(newName);
         });
+
+        statusBlock = $(srvPref$('status'));
 
         if (initialConfig.autoStart) {
             start();
