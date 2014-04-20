@@ -15,6 +15,7 @@
     <button id="get-config-btn">Get current config</button>
     <button id="setup-btn">Setup from config</button>
     <button id="edit-mode-btn">Layout edit mode</button>
+    <span id="superStatus"></span>
 </div>
 <script id="config-dialog-template" type="text/x-handlebars">
     <div>
@@ -115,6 +116,7 @@
 </div>
 <script src="client.js"></script>
 <script src="monitoring.js"></script>
-<script src="monitoring-init-local.js"></script>
+<script src="monitoring-default-config.js"></script>
+<script>RtStat.Monitoring.init();</script>
 </body>
 </html>

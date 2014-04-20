@@ -1,7 +1,7 @@
 if (typeof(RtStat) == "undefined") {
     RtStat = {};
 }
-RtStat.Monitoring = function (config) {
+RtStat.Monitoring = function () {
     var self = this;
     var columns = [];
 
@@ -52,7 +52,7 @@ RtStat.Monitoring = function (config) {
                 alert('JSON can not be parsed (perhaps it\'s not valid). Check developer console for details.');
                 return;
             }
-            self.setup(newConfig);
+            self.setup(newConfig, true);
             m.close();
         });
 
@@ -78,7 +78,7 @@ RtStat.Monitoring = function (config) {
         }
     };
 
-    this.setup = function (config) {
+    this.setup = function (config, remember) {
         removeAllColumns();
 
         for (var i = 0; i < config.columns.length; i++) {
@@ -91,6 +91,24 @@ RtStat.Monitoring = function (config) {
                 var server = new RtStat.Monitoring.Server(serverConfig);
                 columns[i].addServer(server);
             }
+        }
+
+        if (remember) {
+            rememberConfig(config);
+        }
+    };
+
+
+    var rememberConfig = function (config) {
+        localStorage.rtStatMonitoringConfig = JSON.stringify(config);
+        superStatus('Config saved to local storage (will be loaded be default after page refresh)');
+    };
+
+    var getRememberedConfig = function () {
+        if (localStorage.rtStatMonitoringConfig) {
+            return JSON.parse(localStorage.rtStatMonitoringConfig);
+        } else {
+            return undefined;
         }
     };
 
@@ -118,7 +136,23 @@ RtStat.Monitoring = function (config) {
         return currentConfig;
     };
 
-    this.setup(config);
+    var superStatusTimeout;
+    var superStatus = function (text) {
+        $('#superStatus').text(text);
+        if (superStatusTimeout) {
+            clearTimeout(superStatusTimeout);
+        }
+        superStatusTimeout = setTimeout(function () {$('#superStatus').fadeOut('slowest')}, 10000);
+    };
+
+    var rememberedConfig = getRememberedConfig();
+    if (rememberedConfig) {
+        this.setup(rememberedConfig);
+        superStatus('Config loaded from local storage');
+    } else {
+        this.setup(RtStat.Monitoring.defaultConfig);
+        superStatus('Default config loaded');
+    }
 };
 
 RtStat.Monitoring.generateRandomString = function () {

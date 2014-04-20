@@ -1,4 +1,4 @@
-RtStat.Monitoring.init({
+RtStat.Monitoring.defaultConfig = {
     columns: [
         {
             servers: [
@@ -23,4 +23,4 @@ RtStat.Monitoring.init({
             ]
         }
     ]
-});
+};
