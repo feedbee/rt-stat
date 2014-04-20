@@ -33,14 +33,14 @@ class Server
 		$socket = new SocketServer($loop);
 		$socket->listen($port, $address);
 
-		$messageComponent = new MessageComponent($loop, $authToken, $logger, $maxClients);
+		$messagingApp = new MessagingApplication($loop, $authToken, $logger, $maxClients);
 
 		if ($type == self::TYPE_WEB_SOCKET) {
-			$messageComponent = new HttpServer(new WsServer($messageComponent));
+			$messagingApp = new HttpServer(new WsServer($messagingApp));
 		}
 
 		$server = new IoServer(
-			$messageComponent,
+			$messagingApp,
 			$socket,
 			$loop
 		);

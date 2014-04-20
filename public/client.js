@@ -1,26 +1,38 @@
 if (typeof(RtStat) == "undefined") {
     RtStat = {};
 }
-RtStat.WebSocketClient = function (pushCallback) {
+RtStat.WebSocketClient = function (config) {
     var webSocket;
     var connected = false;
+    var protocol;
 
-    this.connect = function (config) {
-        if (!config) {
-            config = {};
-        }
-        if (!config.uri) {
-            config.uri = "ws://localhost:8000/";
+    var responseCommands = ['welcome', 'error', 'push', 'version'];
+
+    if (!config) {
+        config = {};
+    }
+
+    this.connect = function (uri) {
+        protocol = new RtStat.Protocol();
+
+        if (!uri) {
+            uri = "ws://localhost:8000/";
         }
 
-        webSocket = new WebSocket(config.uri);
-        webSocket.onmessage = function (evt) {
-            console.log("Message: " + evt.data);
+        webSocket = new WebSocket(uri);
+        webSocket.onmessage = function (event) {
+            var message = event.data.trim();
+            console.log("Message received: " + message);
+
             if (config.onMessageCallback) {
-                config.onMessageCallback.call(this, event.data);
+                config.onMessageCallback.call(this, message);
             }
-            if (evt.data.toLowerCase().indexOf('push::') == 0) {
-                pushCallback(evt.data.substr(6));
+
+            if (config.onCmdCallback) {
+                var messageParsed = protocol.parseMessage(message);
+                if (responseCommands.indexOf(messageParsed.command) != -1) {
+                    config.onCmdCallback(messageParsed.command, messageParsed.arguments);
+                }
             }
         };
         webSocket.onclose = function () {
@@ -50,11 +62,14 @@ RtStat.WebSocketClient = function (pushCallback) {
         console.log("Disconnected...");
     };
 
-    var sendCommand = function (command, agrs) {
-        var argsStr = agrs ? '::' + agrs.join('::') : '';
-        var cmdStr = command + argsStr;
-        webSocket.send(cmdStr);
-        console.log("Command: " + cmdStr);
+    var sendCommand = function () {
+        var command = arguments.length > 0 ? arguments[0].toLowerCase() : '';
+        var args = arguments.length > 1 ? arguments[1] : [];
+
+        var message = protocol.createMessage(command, args);
+
+        webSocket.send(message);
+        console.log("Message sent: " + message);
     };
 
     this.authenticate = function (token) {
@@ -79,5 +94,61 @@ RtStat.WebSocketClient = function (pushCallback) {
 
     this.isConnected = function () {
         return connected;
-    }
+    };
+};
+
+RtStat.Protocol = function () {
+    this.parseMessage = function (message) {
+        var dataParts = message.split('::', 2);
+        var command = dataParts[0].toLowerCase();
+        var args = [];
+        if (dataParts.length > 1) {
+            args = parseArguments(dataParts[1]);
+        }
+
+        return {
+            command: command,
+            arguments: args
+        };
+    };
+
+    this.createMessage = function (command, args) {
+        var argsEscaped = args.map(function (value) {
+            return String(value).replace(/(::|\\)/g, '\\$1').replace(/\n/g, '\\n');
+        });
+
+        return command + '::' + argsEscaped.join('::');
+    };
+
+    var parseArguments = function (argsStr) {
+        if (argsStr.length < 1) {
+            return [];
+        }
+
+        var escapeMode = false;
+        var argsStack = [''];
+        for (var i = 0; i < argsStr.length; i++) {
+            var char = argsStr.substr(i, 1);
+
+            if (escapeMode) {
+                escapeMode = false;
+                if (char == 'n') {
+                    argsStack[argsStack.length - 1] += '\n';
+                } else {
+                    argsStack[argsStack.length - 1] += char;
+                }
+            } else {
+                if (char == '\\') {
+                    escapeMode = true;
+                } else if (char == ':' && i < argsStr.length - 1 && argsStr.substr(i + 1, 1) == ':') {
+                    argsStack.push('');
+                    i++;
+                } else {
+                    argsStack[argsStack.length - 1] += char;
+                }
+            }
+        }
+
+        return argsStack;
+    };
 };

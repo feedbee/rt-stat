@@ -11,7 +11,7 @@ use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 use React\EventLoop\LoopInterface;
 
-class MessageComponent implements MessageComponentInterface
+class MessagingApplication implements MessageComponentInterface
 {
 	/**
 	 * @var Worker[]
