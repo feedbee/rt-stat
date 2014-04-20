@@ -15,34 +15,38 @@ RtStat.Monitoring = function (config) {
         newCol.init();
     });
     $('#get-config-btn').click(function () {
-        var txId = 'tx-' + RtStat.Monitoring.generateRandomString();
-
         var source = $("#config-dialog-template").html();
         var template = Handlebars.compile(source);
-        $.modal($(template({
+        var block = $(template({
             title: 'Current config',
-            textareaId: txId,
-            needButton: false
-        })));
+            buttons: {
+                save: true
+            }
+        }));
+        $.modal(block);
 
-        $('#' + txId).val(JSON.stringify(self.getCurrentConfig(), undefined, 2));
+        block.find('textarea').val(JSON.stringify(self.getCurrentConfig(), undefined, 2));
+        block.find('.saveButton').click(function () {
+            var blob = new Blob([block.find('textarea').val()], {type: "text/json;charset=utf-8"});
+            saveAs(blob, 'rt-stat-config.json');
+        });
     });
     $('#setup-btn').click(function () {
-        var txId = 'tx-' + RtStat.Monitoring.generateRandomString();
-        var btnId = 'btn-' + RtStat.Monitoring.generateRandomString();
 
         var source = $("#config-dialog-template").html();
         var template = Handlebars.compile(source);
-        var m = $.modal($(template({
+        var block = $(template({
             title: 'Setup from config',
-            textareaId: txId,
-            buttonId: btnId,
-            needButton: true
-        })));
+            buttons: {
+                load: true,
+                setup: true
+            }
+        }));
+        var m = $.modal(block);
 
-        $('#' + btnId).click(function () {
+        block.find('.setupButton').click(function () {
             try {
-                var newConfig = JSON.parse($('#' + txId).val());
+                var newConfig = JSON.parse(block.find('textarea').val());
             } catch (e) {
                 console.error("JSON parsing error:", e);
                 alert('JSON can not be parsed (perhaps it\'s not valid). Check developer console for details.');
@@ -50,6 +54,18 @@ RtStat.Monitoring = function (config) {
             }
             self.setup(newConfig);
             m.close();
+        });
+
+        block.find('.fileInput').on('change', function (event) {
+            var file = event.target.files[0];
+
+            if (file) {
+                var reader = new FileReader();
+                $(reader).on('load', function (event) {
+                    block.find('textarea').val(event.target.result);
+                });
+                reader.readAsText(file);
+            }
         });
     });
 

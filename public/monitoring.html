@@ -5,6 +5,7 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.2/handlebars.min.js"></script>
     <script src="//cdn.jsdelivr.net/simplemodal/1.4.4/jquery.simplemodal.js"></script>
+    <script src="//cdn.jsdelivr.net/filesaver.js/0.1/FileSaver.js"></script>
     <title>Servers Monitoring</title>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -17,10 +18,15 @@
 </div>
 <script id="config-dialog-template" type="text/x-handlebars">
     <div>
-        <h3><label for="{{textareaId}}">{{title}}</label></h3>
-        <textarea id="{{textareaId}}"></textarea>
-        {{#if needButton}}
-        <button id="{{buttonId}}">Setup</button>
+        <h3><label for="config-dialog-textarea">{{title}}</label></h3>
+        <textarea id="config-dialog-textarea"></textarea>
+        {{#if buttons.save}}
+        <button class="saveButton">Save to local file</button>
+        {{/if}}{{#if buttons.setup}}
+        <button class="setupButton">Setup</button>
+        {{/if}}{{#if buttons.load}}
+        <span>Load from local file: </span>
+        <input type="file" class="fileInput" />
         {{/if}}
     </div>
 </script>
