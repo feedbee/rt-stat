@@ -27,6 +27,7 @@ body {
 	text-align: center;
 	display: table;
 	table-layout: fixed;
+	width: 95%;
 }
 
 .col {
@@ -35,6 +36,12 @@ body {
 	padding: 20px;
 	text-align: left;
 	display: table-cell;
+	width: 300px; /* works as min-width for table-cell */
+}
+
+.servers {
+	max-width: 500px;
+	margin: 0 auto;
 }
 
 .server {
@@ -81,12 +88,12 @@ body {
 .indicator-block canvas {
     border: 1px solid #b1b2b8;
     vertical-align: middle;
-    width: 300px;
+    width: 444px;
     height: 20px;
 }
 
 .server-processors canvas {
-    width: 260px;
+    width: 398px;
 }
 
 .indicator-block {
@@ -113,7 +120,7 @@ body {
 
 .indicator-block .label {
     font-size: 90%;
-    width: 34px;
+    width: 38px;
     overflow: hidden;
     display: inline-block;
     padding-top: 4px;
