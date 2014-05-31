@@ -9,7 +9,7 @@ class UptimeInfo extends ShellCommand
 	static protected function parse($data)
 	{
 		$matches = [];
-		preg_match('/ (.*) up\s+(.*),\s+(\d+) users,\s+load average: (.*), (.*), (.*)/', $data, $matches);
+		preg_match('/ (.*) up\s+(.*),\s+(\d+) users?,\s+load average: (.*), (.*), (.*)/', $data, $matches);
 
 		return [
 			'time' => trim($matches[1]),

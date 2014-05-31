@@ -5,6 +5,7 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.2/handlebars.min.js"></script>
     <script src="//cdn.jsdelivr.net/simplemodal/1.4.4/jquery.simplemodal.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-resize/1.1/jquery.ba-resize.min.js"></script>
     <script src="//cdn.jsdelivr.net/filesaver.js/0.1/FileSaver.js"></script>
     <title>Servers Monitoring</title>
     <link rel="stylesheet" href="styles.css">
@@ -88,7 +89,7 @@
                 <div id="server-{{server.id}}-processors-cpuX-template" class="template">
                     <div class="flex">
                         <span id="server-{{server.id}}-processors-\{{cpuId}}-label" class="label">\{{cpuId}}</span>
-                        <canvas id="server-{{server.id}}-processors-\{{cpuId}}-canvas" width="300" height="20"></canvas>
+                        <canvas id="server-{{server.id}}-processors-\{{cpuId}}-canvas" class="auto-resizable" width="300" height="20"></canvas>
                         <span id="server-{{server.id}}-processors-\{{cpuId}}-value" class="value"></span>
                     </div>
                 </div>
@@ -98,7 +99,7 @@
                 <h2>Memory</h2>
 
                 <div class="flex">
-                    <canvas id="server-{{server.id}}-memory-canvas" width="300" height="20"></canvas>
+                    <canvas id="server-{{server.id}}-memory-canvas" class="auto-resizable" width="300" height="20"></canvas>
                     <span id="server-{{server.id}}-memory-value" class="value"></span>
                 </div>
             </div>
@@ -107,7 +108,7 @@
                 <h2>Swap</h2>
 
                 <div class="flex">
-                    <canvas id="server-{{server.id}}-swap-canvas" width="300" height="20"></canvas>
+                    <canvas id="server-{{server.id}}-swap-canvas" class="auto-resizable" width="300" height="20"></canvas>
                     <span id="server-{{server.id}}-swap-value" class="value"></span>
                 </div>
             </div>

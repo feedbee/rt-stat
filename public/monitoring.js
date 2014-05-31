@@ -237,7 +237,7 @@ RtStat.Monitoring.Server = function (initialConfig) {
     };
 
     var srvPref = function (id) {
-        return "server-" + initialConfig.id + "-" + id;
+        return "server-" + initialConfig.id + (id ? "-" + id : '');
     };
     var srvPref$ = function (id) {
         return "#" + srvPref(id);
@@ -460,6 +460,13 @@ RtStat.Monitoring.Server = function (initialConfig) {
         });
 
         statusBlock = $(srvPref$('status'));
+
+        $(srvPref$()).resize(function() {
+            $(this).find('.auto-resizable').each(function(key, el) {
+                var $el = $(el);
+                $el.attr('width', $el.innerWidth());
+            });
+        });
 
         if (initialConfig.autoStart) {
             start();
