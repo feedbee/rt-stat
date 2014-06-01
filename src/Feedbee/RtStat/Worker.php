@@ -10,6 +10,9 @@ use React\EventLoop\Timer\TimerInterface;
 
 class Worker
 {
+	const PING_INTERVAL_SEC = 30;
+	const PONG_TIMEOUT_SEC = 60;
+
 	/**
 	 * @var ConnectionInterface
 	 */
@@ -41,6 +44,16 @@ class Worker
 	private $pushTimer;
 
 	/**
+	 * @var int
+	 */
+	private $lastPongTime;
+
+	/**
+	 * @var TimerInterface
+	 */
+	private $pongTimer;
+
+	/**
 	 * @var bool
 	 */
 	private $authorized = false;
@@ -63,7 +76,8 @@ class Worker
 	public function open()
 	{
 		$this->logger->debug('Worker::opened');
-		$this->sendCommand("Welcome", [Application::NAME . " v." . Application::VERSION]);
+		$this->sendCommand("Welcome", [Application::NAME . " v." . Application::VERSION, 'features:ping']);
+		$this->pushTimer = $this->loop->addPeriodicTimer(self::PING_INTERVAL_SEC, [$this, 'ping']);
 	}
 
 	public function push()
@@ -77,6 +91,18 @@ class Worker
 		}
 
 		$this->sendCommand('Push', [json_encode($data, JSON_UNESCAPED_UNICODE)]);
+	}
+
+	public function ping()
+	{
+		if ($this->lastPongTime < round(microtime(true), 3) - self::PONG_TIMEOUT_SEC) {
+			$this->logger->debug('Worker::pong timeout');
+			$this->connection->close();
+			return;
+		}
+
+		$this->logger->debug('Worker::ping');
+		$this->sendCommand('Ping');
 	}
 
 	/**
@@ -106,6 +132,10 @@ class Worker
 		}
 
 		switch ($command) {
+			case "pong":
+				$this->lastPongTime = round(microtime(true), 3);
+				break;
+
 			case 'auth':
 				if (count($arguments) < 1) {
 					$this->sendError("Auth command has 1 required parameter: string token (not set)");
@@ -195,6 +225,11 @@ class Worker
 			$this->loop->cancelTimer($this->pushTimer);
 			$this->pushTimer = null;
 		}
+
+		if ($this->pongTimer) {
+			$this->loop->cancelTimer($this->pongTimer);
+			$this->pongTimer = null;
+		}
 	}
 
 	public function quit()
@@ -209,7 +244,7 @@ class Worker
 		$this->connection->send($text . "\n");
 	}
 
-	private function sendCommand($command, array $arguments)
+	private function sendCommand($command, array $arguments = array())
 	{
 		$message = Protocol::createMessage($command, $arguments);
 

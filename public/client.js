@@ -4,7 +4,10 @@ if (typeof(RtStat) == "undefined") {
 RtStat.WebSocketClient = function (config) {
     var webSocket;
     var connected = false;
+    var pingTimeout;
     var protocol;
+
+    var self = this;
 
     var responseCommands = ['welcome', 'error', 'push', 'version'];
 
@@ -28,11 +31,16 @@ RtStat.WebSocketClient = function (config) {
                 config.onMessageCallback.call(this, message);
             }
 
-            if (config.onCmdCallback) {
-                var messageParsed = protocol.parseMessage(message);
-                if (responseCommands.indexOf(messageParsed.command) != -1) {
-                    config.onCmdCallback(messageParsed.command, messageParsed.arguments);
+            var messageParsed = protocol.parseMessage(message);
+            if (messageParsed.command == 'welcome') {
+                if (messageParsed.arguments.length < 2 || messageParsed.arguments[1].indexOf('ping') == -1) {
+                    unsetPingTimeout(); // ping is not supported on the legacy server
                 }
+            } else if (messageParsed.command == 'ping') {
+                setPingTimeout();
+                sendCommand('pong');
+            } else if (config.onCmdCallback && responseCommands.indexOf(messageParsed.command) != -1) {
+                config.onCmdCallback(messageParsed.command, messageParsed.arguments);
             }
         };
         webSocket.onclose = function () {
@@ -45,6 +53,7 @@ RtStat.WebSocketClient = function (config) {
         webSocket.onopen = function () {
             console.log("Connected...");
             connected = true;
+            setPingTimeout(); // if server not support ping, timeout will be broken on respective welcome message
             if (config.onOpenCallback) {
                 config.onOpenCallback.call(this);
             }
@@ -60,6 +69,19 @@ RtStat.WebSocketClient = function (config) {
     this.disconnect = function () {
         webSocket.close();
         console.log("Disconnected...");
+    };
+
+    var setPingTimeout = function () {
+        unsetPingTimeout();
+        pingTimeout = setTimeout(function () {
+            console.log("Ping timeout: close connection");
+            self.disconnect();
+        }, 60000);
+    };
+    var unsetPingTimeout = function () {
+        if (pingTimeout) {
+            clearTimeout(pingTimeout);
+        }
     };
 
     var sendCommand = function () {
