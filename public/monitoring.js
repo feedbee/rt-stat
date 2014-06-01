@@ -347,11 +347,11 @@ RtStat.Monitoring.Server = function (initialConfig) {
                     console.log('Error: push command without arguments');
                 }
                 var msg = args[0];
-                var jsonResponce = JSON.parse(msg);
-                cpuStat(jsonResponce.cpu_stat);
-                memInfo(jsonResponce.meminfo);
-                uptime(jsonResponce.uptime);
-                processes(jsonResponce.processes);
+                var jsonResponse = JSON.parse(msg);
+                cpuStat(jsonResponse.cpu_stat);
+                memInfo(jsonResponse.meminfo);
+                uptime(jsonResponse.uptime);
+                processes(jsonResponse.processes);
             }
         },
         onOpenCallback: function () {
