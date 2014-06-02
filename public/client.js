@@ -32,16 +32,19 @@ RtStat.WebSocketClient = function (config) {
             }
 
             var messageParsed = protocol.parseMessage(message);
-            if (messageParsed.command == 'welcome') {
-                if (messageParsed.arguments.length < 2 || messageParsed.arguments[1].indexOf('ping') == -1) {
-                    unsetPingTimeout(); // ping is not supported on the legacy server
-                    console.log("Legacy server mode: ping timeout disabled");
-                }
-            } else if (messageParsed.command == 'ping') {
+            if (messageParsed.command == 'ping') {
                 setPingTimeout();
                 sendCommand('pong');
-            } else if (config.onCmdCallback && responseCommands.indexOf(messageParsed.command) != -1) {
-                config.onCmdCallback(messageParsed.command, messageParsed.arguments);
+            } else {
+                if (messageParsed.command == 'welcome') {
+                    if (messageParsed.arguments.length < 2 || messageParsed.arguments[1].indexOf('ping') == -1) {
+                        unsetPingTimeout(); // ping is not supported on the legacy server
+                        console.log("Legacy server mode: ping timeout disabled");
+                    }
+                }
+                if (config.onCmdCallback && responseCommands.indexOf(messageParsed.command) != -1) {
+                    config.onCmdCallback(messageParsed.command, messageParsed.arguments);
+                }
             }
         };
         webSocket.onclose = function () {
@@ -122,11 +125,11 @@ RtStat.WebSocketClient = function (config) {
 
 RtStat.Protocol = function () {
     this.parseMessage = function (message) {
-        var dataParts = message.split('::', 2);
+        var dataParts = message.split('::');
         var command = dataParts[0].toLowerCase();
         var args = [];
         if (dataParts.length > 1) {
-            args = parseArguments(dataParts[1]);
+            args = parseArguments(dataParts.slice(1).join('::'));
         }
 
         return {

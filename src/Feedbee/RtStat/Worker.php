@@ -51,7 +51,7 @@ class Worker
 	/**
 	 * @var TimerInterface
 	 */
-	private $pongTimer;
+	private $pingTimer;
 
 	/**
 	 * @var bool
@@ -77,7 +77,7 @@ class Worker
 	{
 		$this->logger->debug('Worker::opened');
 		$this->sendCommand("Welcome", [Application::NAME . " v." . Application::VERSION, 'features:ping']);
-		$this->pushTimer = $this->loop->addPeriodicTimer(self::PING_INTERVAL_SEC, [$this, 'ping']);
+		$this->pingTimer = $this->loop->addPeriodicTimer(self::PING_INTERVAL_SEC, [$this, 'ping']);
 	}
 
 	public function push()
@@ -95,7 +95,9 @@ class Worker
 
 	public function ping()
 	{
-		if ($this->lastPongTime < round(microtime(true), 3) - self::PONG_TIMEOUT_SEC) {
+		if (!$this->lastPongTime) {
+			$this->lastPongTime = round(microtime(true), 3);
+		} else if ($this->lastPongTime < round(microtime(true), 3) - self::PONG_TIMEOUT_SEC) {
 			$this->logger->debug('Worker::pong timeout');
 			$this->connection->close();
 			return;
@@ -226,9 +228,9 @@ class Worker
 			$this->pushTimer = null;
 		}
 
-		if ($this->pongTimer) {
-			$this->loop->cancelTimer($this->pongTimer);
-			$this->pongTimer = null;
+		if ($this->pingTimer) {
+			$this->loop->cancelTimer($this->pingTimer);
+			$this->pingTimer = null;
 		}
 	}
 
