@@ -35,6 +35,7 @@ RtStat.WebSocketClient = function (config) {
             if (messageParsed.command == 'welcome') {
                 if (messageParsed.arguments.length < 2 || messageParsed.arguments[1].indexOf('ping') == -1) {
                     unsetPingTimeout(); // ping is not supported on the legacy server
+                    console.log("Legacy server mode: ping timeout disabled");
                 }
             } else if (messageParsed.command == 'ping') {
                 setPingTimeout();
