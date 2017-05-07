@@ -58,7 +58,7 @@ class ServerCommand extends Command
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		if ('0' !== ($overloading = ini_get('mbstring.func_overload'))) {
+		if (0 < ($overloading = ini_get('mbstring.func_overload'))) {
 			$output->writeln("<error>PHP option mbstring.func_overload set to {$overloading}. It breaks the server, exit. "
 				. "Check php.ini and set mbstring.func_overload to 0.</error>");
 			exit(1);
